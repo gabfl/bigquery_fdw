@@ -43,7 +43,7 @@ export PYTHON_OVERRIDE=python3
 make && make install
 
 # Install bigquery_fdw
-pip3 install bigquery_fdw
+pip3 install bigquery-fdw
 ```
 
 ## Usage
@@ -56,8 +56,8 @@ With `psql`:
 CREATE EXTENSION multicorn;
 
 CREATE SERVER bigquery_srv FOREIGN DATA WRAPPER multicorn
-OPTIONS (		
-    wrapper 'bigquery_fdw.fdw.ConstantForeignDataWrapper'		
+OPTIONS (
+    wrapper 'bigquery_fdw.fdw.ConstantForeignDataWrapper'
 );
 
 CREATE FOREIGN TABLE my_bigquery_table (

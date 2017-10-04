@@ -7,8 +7,8 @@ except(IOError, ImportError):
     long_description = open('README.md').read()
 
 setup(
-    name='bigquery_fdw',
-    version='1.0',
+    name='bigquery-fdw',
+    version='1.0.2',
     description='BigQuery Foreign Data Wrapper for PostgreSQL',
     long_description=long_description,
     author='Gabriel Bordeaux',

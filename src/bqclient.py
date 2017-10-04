@@ -58,7 +58,7 @@ class BqClient:
             Returns `queryJob`
         """
 
-        return self.QueryJob
+        return self.queryJob
 
     def readResult(self):
         """

@@ -196,14 +196,17 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         # Add SELECT clause
         clause += "SELECT "
-        for column in columns:
-            if column != self.partitionPseudoColumn:  # Except for the partition pseudo column
-                clause += column + ", "
-            else:
-                clause += "null as " + column + ", "  # Partition pseudo column is forced to return `null`
+        if columns:  # If we have columns
+            for column in columns:
+                if column != self.partitionPseudoColumn:  # Except for the partition pseudo column
+                    clause += column + ", "
+                else:
+                    clause += "null as " + column + ", "  # Partition pseudo column is forced to return `null`
 
-        # Remove final `, `
-        clause = clause.strip(', ')
+            # Remove final `, `
+            clause = clause.strip(', ')
+        else:  # Otherwide fetch all
+            clause += "*"
 
         return clause
 
