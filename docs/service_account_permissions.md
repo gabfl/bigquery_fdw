@@ -2,4 +2,4 @@
 
 The recommended roles for the FDW service account are:
 
-![Permissions](../img/permissions.png?raw=true)
+![Permissions](https://raw.githubusercontent.com/gabfl/bigquery_fdw/master/img/permissions.png)

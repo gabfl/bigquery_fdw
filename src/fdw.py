@@ -41,6 +41,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             self.key = options['fdw_key']
             self.dataset = options['fdw_dataset']
             self.table = options['fdw_table']
+            self.convertToTz = options.get('fdw_convert_tz')
             self.verbose = options.get('fdw_verbose')
 
             # Set SQL dialect
@@ -199,6 +200,13 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         if columns:  # If we have columns
             for column in columns:
                 if column != self.partitionPseudoColumn:  # Except for the partition pseudo column
+                    # Get column data type
+                    dataType = self.getBigQueryDatatype(column)
+
+                    # If the data type is a date or a timestamp
+                    if dataType in ['DATE', 'TIMESTAMP']:
+                        column = self.setTimeZone(column, dataType)
+
                     clause += column + ", "
                 else:
                     clause += "null as " + column + ", "  # Partition pseudo column is forced to return `null`
@@ -209,6 +217,21 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             clause += "*"
 
         return clause
+
+    def setTimeZone(self, column, dataType):
+        """
+            If the option `fdw_convert_tz` is used, convert the time zone automatically from UTC to the desired time zone
+        """
+
+        # Option is set
+        if self.convertToTz:
+            if dataType == 'DATE':  # BigQuery column type is `DATE`
+                return 'DATE(' + column + ', "' + self.convertToTz + '") as ' + column
+            else:  # BigQuery column type is `TIMESTAMP`
+                return 'DATETIME(' + column + ', "' + self.convertToTz + '") as ' + column
+
+        # Option is not set
+        return column
 
     def buildWhereClause(self, quals):
         """
@@ -247,7 +270,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         """
 
         # List of BigQuery operators supported
-        # Exhaustive lisT: https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#operators
+        # Exhaustive list: https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#operators
         # Non listed operators may or may not work
         operators = ['=', '<', '>', '<=', '>=', '!=', '<>', 'LIKE', 'NOT LIKE']
 
