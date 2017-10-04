@@ -81,6 +81,7 @@ List of options implemented in `CREATE FOREIGN TABLE` syntax:
 | `fdw_table` | - | BigQuery table name |
 | `fdw_key` | - | Path to private Json key (See [Key storage recommendations](docs/key_storage.md)) |
 | `fdw_convert_tz` | - | Convert BigQuery time zone for dates and timestamps to selected time zone. Example: `'US/Eastern'`. |
+| `fdw_group` |  `'false'` | See [Remote grouping and counting](remote_grouping.md). |
 | `fdw_verbose` | `'false'` | Set to `'true'` to output debug information in PostrgeSQL's logs |
 | `fdw_sql_dialect` | `'standard'` | BigQuery SQL dialect. Currently only `standard` is supported. |
 

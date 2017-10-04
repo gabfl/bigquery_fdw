@@ -14,6 +14,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
     bq = None  # BqClient instance
     partitionPseudoColumn = 'partition_date'  # Name of the partition pseudo column
     partitionPseudoColumnValue = None  # If a partition is used, its value will be stored in this variable to return it to PostgreSQL
+    countPseudoColumn = '_fdw_count'
 
     def __init__(self, options, columns):
         """
@@ -45,7 +46,10 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             self.verbose = options.get('fdw_verbose')
 
             # Set SQL dialect
-            self.standard_sql = self.setSqlDialect(options.get('fdw_sql_dialect'))
+            self.setOptionSqlDialect(options.get('fdw_sql_dialect'))
+
+            # Set grouping option
+            self.setOptionGroupBy(options.get('fdw_group'))
         except KeyError:
             log_to_postgres("You must specify these options when creating the FDW: fdw_key, fdw_dataset, fdw_table", ERROR)
 
@@ -69,7 +73,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             datatype('timestamp without time zone', 'DATETIME', 'DATETIME'),
         ]
 
-    def setSqlDialect(self, standard_sql):
+    def setOptionSqlDialect(self, standard_sql):
         """
             Set a flag for the SQL dialect.
             It can be `standard` or `legacy`. `standard` will be the default
@@ -83,6 +87,18 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Verbose log
         if self.verbose:
             log_to_postgres("Set SQL dialect to `" + self.dialect + "`", INFO)
+
+    def setOptionGroupBy(self, group):
+        """
+            Set a flag `self.groupBy` as `True` if `group` contains the string 'true'
+            Otherwise, set it as `False`
+        """
+
+        if group == 'true':
+            self.groupBy = True
+            return
+
+        self.groupBy = False
 
     def getClient(self):
         """
@@ -155,10 +171,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                 else:  # Fallback for partition pseudo column
                     line[column] = self.partitionPseudoColumnValue
 
-            # # Verbose log
-            # if self.verbose:
-            #     log_to_postgres(line, INFO)
-
             yield line
 
         # Reset partition pseudo column value
@@ -173,7 +185,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         query = ''
 
         # Add SELECT clause
-        query += self.buildSelectClause(columns)
+        query += 'SELECT ' + self.buildColumnList(columns)
 
         # Add FROM clause
         query += " FROM " + self.dataset + "." + self.table + " "
@@ -182,43 +194,56 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         clause, parameters = self.buildWhereClause(quals)
         query += clause
 
+        # Add group by
+        if self.groupBy:
+            groupByColumns = self.buildColumnList(columns, 'GROUP_BY')
+            if groupByColumns:
+                query += ' GROUP BY ' + self.buildColumnList(columns, 'GROUP_BY')
+
         # Verbose log
         if self.verbose:
             log_to_postgres("Prepared query: `" + query + "`", INFO)
 
         return query, parameters
 
-    def buildSelectClause(self, columns):
+    def buildColumnList(self, columns, usage='SELECT'):
         """
             Build the SELECT clause of the SQL query
         """
 
         clause = ''
 
-        # Add SELECT clause
-        clause += "SELECT "
+        # Disable aliases for Group By
+        useAliases = True
+        if usage == 'GROUP_BY':
+            useAliases = False
+
         if columns:  # If we have columns
             for column in columns:
-                if column != self.partitionPseudoColumn:  # Except for the partition pseudo column
+                if column == self.countPseudoColumn:  # Pseudo column to count grouped rows
+                    if usage == 'SELECT':
+                        clause += "count(*) " + self.addColumnAlias(column, useAliases) + ", "
+                elif column == self.partitionPseudoColumn:  # Partition pseudo column (for SELECT only)
+                    if usage == 'SELECT':
+                        clause += "null " + self.addColumnAlias(column, useAliases) + ", "  # Partition pseudo column is forced to return `null`
+                else:  # Any other column
                     # Get column data type
                     dataType = self.getBigQueryDatatype(column)
 
                     # If the data type is a date or a timestamp
                     if dataType in ['DATE', 'TIMESTAMP']:
-                        column = self.setTimeZone(column, dataType)
+                        column = self.setTimeZone(column, dataType, useAliases)
 
                     clause += column + ", "
-                else:
-                    clause += "null as " + column + ", "  # Partition pseudo column is forced to return `null`
 
             # Remove final `, `
             clause = clause.strip(', ')
-        else:  # Otherwide fetch all
+        elif usage == 'SELECT':  # Otherwise fetch all
             clause += "*"
 
         return clause
 
-    def setTimeZone(self, column, dataType):
+    def setTimeZone(self, column, dataType, useAliases=True):
         """
             If the option `fdw_convert_tz` is used, convert the time zone automatically from UTC to the desired time zone
         """
@@ -226,12 +251,22 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Option is set
         if self.convertToTz:
             if dataType == 'DATE':  # BigQuery column type is `DATE`
-                return 'DATE(' + column + ', "' + self.convertToTz + '") as ' + column
+                return 'DATE(' + column + ', "' + self.convertToTz + '") ' + self.addColumnAlias(column, useAliases)
             else:  # BigQuery column type is `TIMESTAMP`
-                return 'DATETIME(' + column + ', "' + self.convertToTz + '") as ' + column
+                return 'DATETIME(' + column + ', "' + self.convertToTz + '") ' + self.addColumnAlias(column, useAliases)
 
         # Option is not set
         return column
+
+    def addColumnAlias(self, alias, useAliases=True):
+        """
+            Returns a string "as `alias`" if `useAliases` is `True`
+        """
+
+        if useAliases:
+            return " as " + alias
+
+        return ''
 
     def buildWhereClause(self, quals):
         """
