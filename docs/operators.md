@@ -27,4 +27,4 @@
 
 ## External links
 
- - [BigQuery functions and operators](https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators)
+ - [BigQuery operators](https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#operators)
