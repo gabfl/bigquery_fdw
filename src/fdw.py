@@ -279,17 +279,17 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     # Get column data type
                     dataType = self.getBigQueryDatatype(column)
 
+                    # Save column original name
+                    columnOriginalName = column
+
                     # If the data type is a date or a timestamp
                     if dataType in ['DATE', 'TIMESTAMP']:
-                        column = self.setTimeZone(column, dataType, useAliases)
+                        column = self.setTimeZone(column, dataType)
 
                     # Data type casting
-                    casted = self.castColumn(column, dataType)
+                    column = self.castColumn(column, columnOriginalName, dataType)
 
-                    if casted:
-                        clause += casted + " " + self.addColumnAlias(column, useAliases) + ", "
-                    else:
-                        clause += column + ", "
+                    clause += column + " " + self.addColumnAlias(columnOriginalName, useAliases) + ", "
 
             # Remove final `, `
             clause = clause.strip(', ')
@@ -298,7 +298,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         return clause
 
-    def setTimeZone(self, column, dataType, useAliases=True):
+    def setTimeZone(self, column, dataType):
         """
             If the option `fdw_convert_tz` is used, convert the time zone automatically from UTC to the desired time zone
         """
@@ -306,21 +306,21 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Option is set
         if self.convertToTz:
             if dataType == 'DATE':  # BigQuery column type is `DATE`
-                return 'DATE(' + column + ', "' + self.convertToTz + '") ' + self.addColumnAlias(column, useAliases)
+                return 'DATE(' + column + ', "' + self.convertToTz + '") '
             else:  # BigQuery column type is `TIMESTAMP`
-                return 'DATETIME(' + column + ', "' + self.convertToTz + '") ' + self.addColumnAlias(column, useAliases)
+                return 'DATETIME(' + column + ', "' + self.convertToTz + '") '
 
         # Option is not set
         return column
 
-    def castColumn(self, column, dataType):
+    def castColumn(self, column, columnOriginalName, dataType):
         """
             If the option `fdw_casting` is used, this method will attempt to cast the column to the new type
         """
 
-        if self.castingRules and column in self.castingRules:  # If we have casting rule for this column
+        if self.castingRules and columnOriginalName in self.castingRules:  # If we have casting rule for this column
             # Get desired casting
-            castTo = self.castingRules[column]
+            castTo = self.castingRules[columnOriginalName]
 
             # Find if we have a matching rule
             rule = [conversionRule for conversionRule in self.conversionRules if conversionRule.bq_standard_from == dataType.upper()]
@@ -333,6 +333,9 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     log_to_postgres("Casting from the data type `" + dataType.upper() + "` to the data type `" + castTo.upper() + "` is not permitted.", ERROR)
             else:
                 log_to_postgres("Casting from the data type `" + dataType.upper() + "` is not permitted.", ERROR)
+
+        # Option is not set
+        return column
 
     def addColumnAlias(self, alias, useAliases=True):
         """
