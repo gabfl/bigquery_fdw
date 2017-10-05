@@ -21,7 +21,7 @@ OPTIONS (
 ### Without time zone option
 
 ```sql
-test=# DROP TABLE tmp;
+test=# DROP FOREIGN TABLE tmp;
 
 test=# CREATE FOREIGN TABLE tmp (
     uuid bigint,
@@ -52,7 +52,7 @@ test=# SELECT uuid, timestamp FROM tmp LIMIT 10;
 ### With time zone option
 
 ```sql
-test=# DROP TABLE tmp;
+test=# DROP FOREIGN TABLE tmp;
 
 test=# CREATE FOREIGN TABLE tmp (
     uuid bigint,

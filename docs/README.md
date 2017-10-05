@@ -1,11 +1,16 @@
-# Documentation
+# bigquery_fdw documentation
 
 ## Foreign table creation and queries
 
  - [Installation and usage](../README.md#installation)
  - [Convert BigQuery data types to PostgreSQL data types](data_types.md)
  - [Supported operators](operators.md)
+ - [Performance and understanding the FDW mechanism](performance_and_mechanism.md)
+
+## Advanced usage
+
  - [Time zone conversion support](timezone.md)
+ - [Remote grouping and counting](remote_grouping.md)
 
 ## BigQuery client
 
