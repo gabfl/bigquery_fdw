@@ -361,7 +361,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             clause += "WHERE "
             for qual in quals:
                 if qual.field_name == self.partitionPseudoColumn:
-                    clause += "_PARTITIONTIME = ?"
+                    clause += "_PARTITIONTIME " + str(self.getOperator(qual.operator)) + " ?"
                     parameters.append(self.setParameter(qual.field_name, 'TIMESTAMP', qual.value))  # Force data type to `TIMESTAMP`
 
                     # Store the value to return it to PostgreSQL
