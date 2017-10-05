@@ -6,10 +6,12 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ## Features and limitations
 
- - Table partitioning is supported. You can use partitions in your SQL queries.
+ - Table partitioning is supported. [You can use partitions in your SQL queries](docs/table_partitioning.md).
  - Queries are parameterized when sent to BigQuery
  - BigQuery's standard SQL support (legacy SQL is not supported)
- - Authentication works with a "Service Account" Json private key
+ - Authentication works with a "[Service Account](docs/service_account.md)" Json private key
+
+[Read more](docs/README.md).
 
 ## Requirements
 
@@ -33,7 +35,7 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ## Installation
 
-```
+```bash
 # Install `setuptools` if necessary
 pip3 install --upgrade setuptools
 
@@ -81,37 +83,11 @@ List of options implemented in `CREATE FOREIGN TABLE` syntax:
 | `fdw_table` | - | BigQuery table name |
 | `fdw_key` | - | Path to private Json key (See [Key storage recommendations](docs/key_storage.md)) |
 | `fdw_convert_tz` | - | Convert BigQuery time zone for dates and timestamps to selected time zone. Example: `'US/Eastern'`. |
-| `fdw_group` |  `'false'` | See [Remote grouping and counting](remote_grouping.md). |
+| `fdw_group` |  `'false'` | See [Remote grouping and counting](docs/remote_grouping.md). |
+| `fdw_casting` |  - | See [Casting](docs/casting.md). |
 | `fdw_verbose` | `'false'` | Set to `'true'` to output debug information in PostrgeSQL's logs |
 | `fdw_sql_dialect` | `'standard'` | BigQuery SQL dialect. Currently only `standard` is supported. |
 
-## Table partitioning
-
-BigQuery **table partitioning is supported**. When partitioning a table, BigQuery creates a pseudo column called `_PARTITIONTIME`.
-
-To use partitions, you need to add a column `partition_date` with the type `date` in the foreign table definition, for example:
-
-```sql
-CREATE FOREIGN TABLE my_bigquery_table (
-    column1 text,
-    column2 bigint,
-    partition_date date -- <-- partition!
-) SERVER bigquery_srv
-OPTIONS (
-    fdw_dataset  'my_dataset',
-    fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json'
-);
-```
-
-You can then use the partition in the `WHERE` clause:
-
-```sql
-SELECT column1, column2
-FROM my_bigquery_table
-WHERE column1 = 'abc' AND partition_date = '2017-12-01'
-```
-
 ## More documentation
 
-See [/docs](/docs).
+See [bigquery_fdw documentation](docs/README.md).
