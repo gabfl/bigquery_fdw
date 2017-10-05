@@ -14,7 +14,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
     bq = None  # BqClient instance
     partitionPseudoColumn = 'partition_date'  # Name of the partition pseudo column
     partitionPseudoColumnValue = None  # If a partition is used, its value will be stored in this variable to return it to PostgreSQL
-    countPseudoColumn = '_fdw_count'
+    countPseudoColumn = '_fdw_count'  # Pseudo column to fetch `count(*)` when using the remote counting and grouping feature
+    castingRules = None  # Dict of casting rules when using the `fdw_casting` option
 
     def __init__(self, options, columns):
         """
@@ -29,8 +30,9 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Set table columns
         self.columns = columns
 
-        # Set data types mapping
+        # Set data types and conversion rules mapping
         self.setDatatypes()
+        self.setConversionRules()
 
     def setOptions(self, options):
         """
@@ -50,6 +52,9 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
             # Set grouping option
             self.setOptionGroupBy(options.get('fdw_group'))
+
+            # Set casting rules
+            self.setOptionCasting(options.get('fdw_casting'))
         except KeyError:
             log_to_postgres("You must specify these options when creating the FDW: fdw_key, fdw_dataset, fdw_table", ERROR)
 
@@ -71,6 +76,28 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             datatype('date', 'DATE', 'DATE'),
             datatype('time without time zone', 'TIME', 'TIME'),
             datatype('timestamp without time zone', 'DATETIME', 'DATETIME'),
+        ]
+
+    def setConversionRules(self):
+        """
+            Set list of allowed conversion rules
+        """
+
+        # Create a named tuple
+        conversionRule = namedtuple('conversionRule', 'bq_standard_from bq_standard_to')
+
+        self.conversionRules = [
+            conversionRule('INT64', ['BOOL', 'FLOAT64', 'INT64', 'STRING']),
+            conversionRule('FLOAT64', ['FLOAT64', 'INT64', 'STRING']),
+            conversionRule('BOOL', ['BOOL', 'INT64', 'STRING']),
+            conversionRule('STRING', ['BOOL', 'BYTES', 'DATE', 'DATETIME', 'FLOAT64', 'INT64', 'STRING', 'TIME', 'TIMESTAMP']),
+            conversionRule('BYTES', ['BYTES', 'STRING']),
+            conversionRule('DATE', ['DATE', 'DATETIME', 'STRING', 'TIMESTAMP']),
+            conversionRule('DATETIME', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
+            conversionRule('TIME', ['STRING', 'TIME']),
+            conversionRule('TIMESTAMP', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
+            conversionRule('ARRAY', ['ARRAY']),
+            conversionRule('STRUCT', ['STRUCT']),
         ]
 
     def setOptionSqlDialect(self, standard_sql):
@@ -99,6 +126,28 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             return
 
         self.groupBy = False
+
+    def setOptionCasting(self, cactingRules):
+        """
+            Conversion rules are received as a string, for example: '{"key": "FLOAT64", "datetime": "DATE"}'
+
+            The string will be converted to a dict
+        """
+
+        if cactingRules:
+            # Cast string as a dict
+            try:
+                import ast
+                self.castingRules = ast.literal_eval(cactingRules)
+            except Exception as e:
+                log_to_postgres("fdw_casting conversion failed: `" + str(e) + "`", ERROR)
+
+            # For security reasons, ensure that the string was correctly casted as a dict
+            try:
+                if type(self.castingRules) is not dict:
+                    raise ValueError('fdw_casting format is incorrect.')
+            except Exception as e:
+                log_to_postgres("fdw_casting conversion failed: `" + str(e) + "`", ERROR)
 
     def getClient(self):
         """
@@ -230,11 +279,17 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     # Get column data type
                     dataType = self.getBigQueryDatatype(column)
 
+                    # Save column original name
+                    columnOriginalName = column
+
                     # If the data type is a date or a timestamp
                     if dataType in ['DATE', 'TIMESTAMP']:
-                        column = self.setTimeZone(column, dataType, useAliases)
+                        column = self.setTimeZone(column, dataType)
 
-                    clause += column + ", "
+                    # Data type casting
+                    column = self.castColumn(column, columnOriginalName, dataType)
+
+                    clause += column + " " + self.addColumnAlias(columnOriginalName, useAliases) + ", "
 
             # Remove final `, `
             clause = clause.strip(', ')
@@ -243,7 +298,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         return clause
 
-    def setTimeZone(self, column, dataType, useAliases=True):
+    def setTimeZone(self, column, dataType):
         """
             If the option `fdw_convert_tz` is used, convert the time zone automatically from UTC to the desired time zone
         """
@@ -251,9 +306,33 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Option is set
         if self.convertToTz:
             if dataType == 'DATE':  # BigQuery column type is `DATE`
-                return 'DATE(' + column + ', "' + self.convertToTz + '") ' + self.addColumnAlias(column, useAliases)
+                return 'DATE(' + column + ', "' + self.convertToTz + '") '
             else:  # BigQuery column type is `TIMESTAMP`
-                return 'DATETIME(' + column + ', "' + self.convertToTz + '") ' + self.addColumnAlias(column, useAliases)
+                return 'DATETIME(' + column + ', "' + self.convertToTz + '") '
+
+        # Option is not set
+        return column
+
+    def castColumn(self, column, columnOriginalName, dataType):
+        """
+            If the option `fdw_casting` is used, this method will attempt to cast the column to the new type
+        """
+
+        if self.castingRules and columnOriginalName in self.castingRules:  # If we have casting rule for this column
+            # Get desired casting
+            castTo = self.castingRules[columnOriginalName]
+
+            # Find if we have a matching rule
+            rule = [conversionRule for conversionRule in self.conversionRules if conversionRule.bq_standard_from == dataType.upper()]
+
+            if rule:
+                # Check if casting from the original data type to the new one is supported
+                if castTo.upper() in rule[0].bq_standard_to:
+                    return 'CAST(' + column + ' as ' + castTo.upper() + ')'
+                else:
+                    log_to_postgres("Casting from the data type `" + dataType.upper() + "` to the data type `" + castTo.upper() + "` is not permitted.", ERROR)
+            else:
+                log_to_postgres("Casting from the data type `" + dataType.upper() + "` is not permitted.", ERROR)
 
         # Option is not set
         return column
@@ -282,7 +361,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             clause += "WHERE "
             for qual in quals:
                 if qual.field_name == self.partitionPseudoColumn:
-                    clause += "_PARTITIONTIME = ?"
+                    clause += "_PARTITIONTIME " + str(self.getOperator(qual.operator)) + " ?"
                     parameters.append(self.setParameter(qual.field_name, 'TIMESTAMP', qual.value))  # Force data type to `TIMESTAMP`
 
                     # Store the value to return it to PostgreSQL
@@ -321,7 +400,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         else:  # Operator is not supported
             log_to_postgres("Operator `" + operator + "` is not currently supported", ERROR)
 
-    def getBigQueryDatatype(self, column):
+    def getBigQueryDatatype(self, column, dialect='standard'):
         """
             Returns the BigQuery standard SQL data type of a PostgreSQL column
 
@@ -334,7 +413,11 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         for datatype in self.datatypes:  # For each known data types
             if datatype.postgres == pgDatatype:  # If the PostgreSQL data type matches the known data type
-                return datatype.bq_standard  # Returns equivalent BigQuery data type
+                # Returns equivalent BigQuery data type
+                if dialect == 'legacy':
+                    return datatype.bq_legacy
+                else:
+                    return datatype.bq_standard
 
         # Return a default data type in an attempt to save the day
         return 'STRING'
