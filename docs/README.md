@@ -9,8 +9,10 @@
 
 ## Advanced usage
 
+ - [Table partitioning](table_partitioning.md)
  - [Time zone conversion support](timezone.md)
  - [Remote grouping and counting](remote_grouping.md)
+ - [Casting (convert column type to another type)](casting.md)
 
 ## BigQuery client
 
