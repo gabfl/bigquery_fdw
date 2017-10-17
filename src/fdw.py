@@ -45,13 +45,15 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             self.dataset = options['fdw_dataset']
             self.table = options['fdw_table']
             self.convertToTz = options.get('fdw_convert_tz')
-            self.verbose = options.get('fdw_verbose')
 
             # Set SQL dialect
             self.setOptionSqlDialect(options.get('fdw_sql_dialect'))
 
             # Set grouping option
             self.setOptionGroupBy(options.get('fdw_group'))
+
+            # Set verbose option
+            self.setOptionVerbose(options.get('fdw_verbose'))
 
             # Set casting rules
             self.setOptionCasting(options.get('fdw_casting'))
@@ -126,6 +128,18 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             return
 
         self.groupBy = False
+
+    def setOptionVerbose(self, verbose):
+        """
+            Set a flag `self.verbose` as `True` if `verbose` contains the string 'true'
+            Otherwise, set it as `False`
+        """
+
+        if verbose == 'true':
+            self.verbose = True
+            return
+
+        self.verbose = False
 
     def setOptionCasting(self, cactingRules):
         """
