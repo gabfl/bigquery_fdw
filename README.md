@@ -40,7 +40,7 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 pip3 install --upgrade setuptools
 
 # Install Multicorn
-git clone git://github.com/Kozea/Multicorn.git
+git clone git://github.com/Kozea/Multicorn.git && cd Multicorn
 export PYTHON_OVERRIDE=python3
 make && make install
 
