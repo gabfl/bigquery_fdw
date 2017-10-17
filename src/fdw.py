@@ -46,14 +46,14 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             self.table = options['fdw_table']
             self.convertToTz = options.get('fdw_convert_tz')
 
+            # Set verbose option
+            self.setOptionVerbose(options.get('fdw_verbose'))
+
             # Set SQL dialect
             self.setOptionSqlDialect(options.get('fdw_sql_dialect'))
 
             # Set grouping option
             self.setOptionGroupBy(options.get('fdw_group'))
-
-            # Set verbose option
-            self.setOptionVerbose(options.get('fdw_verbose'))
 
             # Set casting rules
             self.setOptionCasting(options.get('fdw_casting'))
