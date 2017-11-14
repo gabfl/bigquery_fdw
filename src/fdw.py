@@ -279,8 +279,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                 if column == self.countPseudoColumn:  # Pseudo column to count grouped rows
                     if usage == 'SELECT':
                         clause += "count(*) " + self.addColumnAlias(column, useAliases) + ", "
-                elif column == self.partitionPseudoColumn:  # Partition pseudo column (for SELECT only)
-                    clause += "_PARTITIONTIME " + self.addColumnAlias(column, useAliases) + ", "  # Partition pseudo column
+                elif column == self.partitionPseudoColumn:  # Partition pseudo column
+                    clause += "_PARTITIONTIME " + self.addColumnAlias(column, useAliases) + ", "
                 else:  # Any other column
                     # Get column data type
                     dataType = self.getBigQueryDatatype(column)
