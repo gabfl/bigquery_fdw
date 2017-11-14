@@ -221,7 +221,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         query, parameters = self.buildQuery(quals, columns)
 
         # Run query
-        self.bq.runAsyncQuery(query, parameters, self.dialect)
+        self.bq.runQuery(query, parameters, self.dialect)
 
         # Return query output
         for row in self.bq.readResult():
