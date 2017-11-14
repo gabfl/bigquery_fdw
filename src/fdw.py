@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from collections import namedtuple
+import datetime
 
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres, ERROR, WARNING, INFO, DEBUG
@@ -228,9 +229,9 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             # Create an ordered dict with the column name and value
             # Example: `OrderedDict([('column1', 'value1'), ('column2', value2)])`
             line = OrderedDict()
-            for i, column in enumerate(columns):
+            for column in columns:
                 if column != self.partitionPseudoColumn:  # Except for the partition pseudo column
-                    line[column] = row[i]
+                    line[column] = row[column]
                 else:  # Fallback for partition pseudo column
                     line[column] = self.partitionPseudoColumnValue
 
@@ -376,7 +377,11 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             for qual in quals:
                 if qual.field_name == self.partitionPseudoColumn:
                     clause += "_PARTITIONTIME " + str(self.getOperator(qual.operator)) + " ?"
-                    parameters.append(self.setParameter(qual.field_name, 'TIMESTAMP', qual.value))  # Force data type to `TIMESTAMP`
+
+                    # Format date as a timestamp
+                    value = qual.value.strftime("%Y-%m-%d 00:00:00")
+
+                    parameters.append(self.setParameter(qual.field_name, 'TIMESTAMP', value))  # Force data type to `TIMESTAMP`
 
                     # Store the value to return it to PostgreSQL
                     self.partitionPseudoColumnValue = self.bq.varToString(qual.value)
@@ -443,6 +448,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         # Verbose log
         if self.verbose:
-            log_to_postgres("Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` witht he type `" + type + "`", INFO)
+            log_to_postgres("Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` witht the type `" + type + "`", INFO)
 
         return self.bq.setParameter(type, value)

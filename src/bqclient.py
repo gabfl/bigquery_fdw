@@ -5,7 +5,6 @@
     https://github.com/GoogleCloudPlatform/python-docs-samples/tree/master/bigquery/cloud-client
 """
 
-import uuid
 import datetime
 
 from google.cloud import bigquery
@@ -40,8 +39,14 @@ class BqClient:
         """
 
         if self.client:
-            self.queryJob = self.client.query(query)
-            # , query_parameters=parameters
+            if parameters:  # Parameterized query
+                # Prepare job configuration
+                job_config = bigquery.QueryJobConfig()
+                job_config.query_parameters = parameters
+
+                self.queryJob = self.client.query(query, job_config=job_config)
+            else:  # Non parameterized query
+                self.queryJob = self.client.query(query)
 
             # Set SQL dialect
             if sqlDialect == 'legacy':
@@ -65,7 +70,8 @@ class BqClient:
         """
 
         if self.queryJob:
-            return self.queryJob.result()
+            result = self.queryJob.result()
+            return list(result)
         else:
             raise RuntimeError('No query is pending a result.')
 
