@@ -34,24 +34,23 @@ class BqClient:
 
         return self.client
 
-    def runAsyncQuery(self, query, parameters=[], sqlDialect='standard'):
+    def runQuery(self, query, parameters=[], sqlDialect='standard'):
         """
-            Run asynchronous BigQuery query
+            Run BigQuery query
         """
 
         if self.client:
-            self.queryJob = self.client.run_async_query(str(uuid.uuid4()), query,  query_parameters=parameters)
+            self.queryJob = self.client.query(query)
+            # , query_parameters=parameters
 
             # Set SQL dialect
             if sqlDialect == 'legacy':
-                self.queryJob.use_legacy_sql = True
+                self.queryJob.UseLegacySQL = True
             else:
-                self.queryJob.use_legacy_sql = False
+                self.queryJob.UseLegacySQL = False
 
-            self.queryJob.begin()
-            self.queryJob.result()  # Wait for job to complete.
         else:
-            raise RuntimeError('BigQuery client is not instantiated properly (from `runAsyncQuery`).')
+            raise RuntimeError('BigQuery client is not instantiated properly (from `runQuery`).')
 
     def getQueryJob(self):
         """
@@ -66,9 +65,7 @@ class BqClient:
         """
 
         if self.queryJob:
-            destination_table = self.queryJob.destination
-            destination_table.reload()
-            return destination_table.fetch_data()
+            return self.queryJob.result()
         else:
             raise RuntimeError('No query is pending a result.')
 

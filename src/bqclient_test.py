@@ -26,7 +26,7 @@ def main():
     print(bq.getClient())
 
     # Run query
-    bq.runAsyncQuery(args.query)
+    bq.runQuery(args.query)
     print(" * Query instance:")
     print(bq.getQueryJob())
 
