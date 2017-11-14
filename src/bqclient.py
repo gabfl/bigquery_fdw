@@ -5,7 +5,6 @@
     https://github.com/GoogleCloudPlatform/python-docs-samples/tree/master/bigquery/cloud-client
 """
 
-import uuid
 import datetime
 
 from google.cloud import bigquery
@@ -34,24 +33,29 @@ class BqClient:
 
         return self.client
 
-    def runAsyncQuery(self, query, parameters=[], sqlDialect='standard'):
+    def runQuery(self, query, parameters=[], sqlDialect='standard'):
         """
-            Run asynchronous BigQuery query
+            Run BigQuery query
         """
 
         if self.client:
-            self.queryJob = self.client.run_async_query(str(uuid.uuid4()), query,  query_parameters=parameters)
+            if parameters:  # Parameterized query
+                # Prepare job configuration
+                job_config = bigquery.QueryJobConfig()
+                job_config.query_parameters = parameters
+
+                self.queryJob = self.client.query(query, job_config=job_config)
+            else:  # Non parameterized query
+                self.queryJob = self.client.query(query)
 
             # Set SQL dialect
             if sqlDialect == 'legacy':
-                self.queryJob.use_legacy_sql = True
+                self.queryJob.UseLegacySQL = True
             else:
-                self.queryJob.use_legacy_sql = False
+                self.queryJob.UseLegacySQL = False
 
-            self.queryJob.begin()
-            self.queryJob.result()  # Wait for job to complete.
         else:
-            raise RuntimeError('BigQuery client is not instantiated properly (from `runAsyncQuery`).')
+            raise RuntimeError('BigQuery client is not instantiated properly (from `runQuery`).')
 
     def getQueryJob(self):
         """
@@ -66,9 +70,8 @@ class BqClient:
         """
 
         if self.queryJob:
-            destination_table = self.queryJob.destination
-            destination_table.reload()
-            return destination_table.fetch_data()
+            result = self.queryJob.result()
+            return list(result)
         else:
             raise RuntimeError('No query is pending a result.')
 

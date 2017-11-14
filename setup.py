@@ -17,7 +17,7 @@ setup(
     license='MIT',
     packages=['bigquery_fdw'],
     package_dir={'bigquery_fdw': 'src'},
-    install_requires=['argparse', 'google-cloud-bigquery'],  # external dependencies
+    install_requires=['argparse', 'google-cloud-bigquery==0.28'],  # external dependencies
     entry_points={
         'console_scripts': [
             # 'bigquery_fdw = bigquery_fdw.fdw:main',
