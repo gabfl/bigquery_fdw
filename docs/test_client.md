@@ -20,5 +20,5 @@ $ bq_client_test --key /path/to/my_key.json \
  * Query instance:
 <google.cloud.bigquery.job.QueryJob object at 0x10c863c18>
  * Query results:
-(140358,)
+Row((21215,), {'f0_': 0})
 ```
