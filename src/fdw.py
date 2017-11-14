@@ -13,7 +13,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
     clients = {}  # Dictionnary of clients
     bq = None  # BqClient instance
     partitionPseudoColumn = 'partition_date'  # Name of the partition pseudo column
-    partitionPseudoColumnValue = None  # If a partition is used, its value will be stored in this variable to return it to PostgreSQL
     countPseudoColumn = '_fdw_count'  # Pseudo column to fetch `count(*)` when using the remote counting and grouping feature
     castingRules = None  # Dict of casting rules when using the `fdw_casting` option
 
@@ -229,15 +228,9 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             # Example: `OrderedDict([('column1', 'value1'), ('column2', value2)])`
             line = OrderedDict()
             for column in columns:
-                if column != self.partitionPseudoColumn:  # Except for the partition pseudo column
-                    line[column] = row[column]
-                else:  # Fallback for partition pseudo column
-                    line[column] = self.partitionPseudoColumnValue
+                line[column] = row[column]
 
             yield line
-
-        # Reset partition pseudo column value
-        self.partitionPseudoColumnValue = None
 
     def buildQuery(self, quals, columns):
         """
@@ -287,8 +280,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     if usage == 'SELECT':
                         clause += "count(*) " + self.addColumnAlias(column, useAliases) + ", "
                 elif column == self.partitionPseudoColumn:  # Partition pseudo column (for SELECT only)
-                    if usage == 'SELECT':
-                        clause += "null " + self.addColumnAlias(column, useAliases) + ", "  # Partition pseudo column is forced to return `null`
+                    clause += "_PARTITIONTIME " + self.addColumnAlias(column, useAliases) + ", "  # Partition pseudo column
                 else:  # Any other column
                     # Get column data type
                     dataType = self.getBigQueryDatatype(column)
@@ -381,9 +373,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     value = qual.value.strftime("%Y-%m-%d 00:00:00")
 
                     parameters.append(self.setParameter(qual.field_name, 'TIMESTAMP', value))  # Force data type to `TIMESTAMP`
-
-                    # Store the value to return it to PostgreSQL
-                    self.partitionPseudoColumnValue = self.bq.varToString(qual.value)
                 else:
                     clause += str(qual.field_name) + " " + str(self.getOperator(qual.operator)) + " ?"
                     parameters.append(self.setParameter(qual.field_name, self.getBigQueryDatatype(qual.field_name), qual.value))
