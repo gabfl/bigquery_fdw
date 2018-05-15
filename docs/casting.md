@@ -30,7 +30,7 @@ test=# CREATE FOREIGN TABLE tmp (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json'
+    fdw_key '/opt/bigquery_fdw/key.json'
 );
 
 test=# SELECT timestamp FROM tmp LIMIT 5;
@@ -56,7 +56,7 @@ test=# CREATE FOREIGN TABLE tmp (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json',
+    fdw_key '/opt/bigquery_fdw/key.json',
     fdw_casting '{"timestamp": "DATE"}'
 );
 

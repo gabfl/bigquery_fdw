@@ -22,4 +22,4 @@
 ## Security
 
  - [Service Account recommended permissions](service_account_permissions.md)
- - [Private Key storage recommendations](key_storage.md)
+ - [Private key storage recommendations](key_storage.md)

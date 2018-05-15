@@ -5,14 +5,14 @@ bigquery_fdw contains the utility `bq_client_test` to test a query against the B
 ## Usage
 
 ```bash
-bq_client_test --key /path/to/my_key.json \
+bq_client_test --key /path/to/key.json \
                --query "SELECT count(*) FROM my_dataset.my_table"
 ```
 
 ## Example
 
 ```
-$ bq_client_test --key /path/to/my_key.json \
+$ bq_client_test --key /path/to/key.json \
 >                --query "SELECT count(*) FROM my_dataset.my_table"
 
  * BigQuery client instance:

@@ -1,4 +1,4 @@
-# Private Key storage recommendations
+# Private key storage recommendations
 
 The private Json key needs to be stored in a file accessible to the PostgreSQL client.
 
@@ -16,7 +16,7 @@ It is recommended to store the key in a dedicated folder `/opt/bigquery_fdw`:
 mkdir -p /opt/bigquery_fdw
 
 # Copy key in directory
-cp /current/path/to/key.json /opt/bigquery_fdw/
+cp /current/path/to/key.json /opt/bigquery_fdw/key.json
 
 # Set correct permissions
 chown -R postgres.postgres /opt/bigquery_fdw
