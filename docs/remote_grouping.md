@@ -44,7 +44,7 @@ test=# CREATE FOREIGN TABLE tmp (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json'
+    fdw_key '/opt/bigquery_fdw/key.json'
 );
 
 test=# SELECT country_code, count(*)
@@ -88,7 +88,7 @@ test=# CREATE FOREIGN TABLE tmp (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json',
+    fdw_key '/opt/bigquery_fdw/key.json',
     fdw_group 'true' -- <-- Flag to automatically group columns
 );
 
