@@ -1,4 +1,4 @@
-# Private Key storage recommendations
+# Private key storage recommendations
 
 The private Json key needs to be stored in a file accessible to the PostgreSQL client.
 
