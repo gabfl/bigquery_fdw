@@ -22,11 +22,18 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ### Dependencies required to install bigquery_fdw:
 
- - `postgresql-server-dev-X.Y`
- - `python3-pip`
- - `python3-dev`
- - `make`
- - `gcc`
+You need to install the following dependencies:
+
+```bash
+# Install required packages
+apt-get update
+apt-get install --yes postgresql-server-dev-10 python3-setuptools python3-dev make gcc git
+
+# Install pip3
+easy_install3 pip
+```
+
+For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-10`.
 
 ### Major dependencies installed automatically during the installation process:
 
@@ -69,7 +76,7 @@ CREATE FOREIGN TABLE my_bigquery_table (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json'
+    fdw_key '/opt/bigquery_fdw/key.json'
 );
 ```
 

@@ -13,7 +13,7 @@ CREATE FOREIGN TABLE my_bigquery_table (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/user.json'
+    fdw_key '/opt/bigquery_fdw/key.json'
 );
 ```
 
