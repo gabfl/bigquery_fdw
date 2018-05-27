@@ -13,12 +13,13 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
     clients = {}  # Dictionnary of clients
     bq = None  # BqClient instance
     partitionPseudoColumn = 'partition_date'  # Name of the partition pseudo column
-    countPseudoColumn = '_fdw_count'  # Pseudo column to fetch `count(*)` when using the remote counting and grouping feature
+    # Pseudo column to fetch `count(*)` when using the remote counting and grouping feature
+    countPseudoColumn = '_fdw_count'
     castingRules = None  # Dict of casting rules when using the `fdw_casting` option
 
     def __init__(self, options, columns):
         """
-            Initialize instancem, set class leval vars
+            Initialize instance, set class level vars
         """
 
         super(ConstantForeignDataWrapper, self).__init__(options, columns)
@@ -57,7 +58,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             # Set casting rules
             self.setOptionCasting(options.get('fdw_casting'))
         except KeyError:
-            log_to_postgres("You must specify these options when creating the FDW: fdw_key, fdw_dataset, fdw_table", ERROR)
+            log_to_postgres(
+                "You must specify these options when creating the FDW: fdw_key, fdw_dataset, fdw_table", ERROR)
 
     def setDatatypes(self):
         """
@@ -85,23 +87,28 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         """
 
         # Create a named tuple
-        conversionRule = namedtuple('conversionRule', 'bq_standard_from bq_standard_to')
+        conversionRule = namedtuple(
+            'conversionRule', 'bq_standard_from bq_standard_to')
 
         self.conversionRules = [
             conversionRule('INT64', ['BOOL', 'FLOAT64', 'INT64', 'STRING']),
             conversionRule('FLOAT64', ['FLOAT64', 'INT64', 'STRING']),
             conversionRule('BOOL', ['BOOL', 'INT64', 'STRING']),
-            conversionRule('STRING', ['BOOL', 'BYTES', 'DATE', 'DATETIME', 'FLOAT64', 'INT64', 'STRING', 'TIME', 'TIMESTAMP']),
+            conversionRule('STRING', ['BOOL', 'BYTES', 'DATE', 'DATETIME',
+                                      'FLOAT64', 'INT64', 'STRING', 'TIME', 'TIMESTAMP']),
             conversionRule('BYTES', ['BYTES', 'STRING']),
-            conversionRule('DATE', ['DATE', 'DATETIME', 'STRING', 'TIMESTAMP']),
-            conversionRule('DATETIME', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
+            conversionRule(
+                'DATE', ['DATE', 'DATETIME', 'STRING', 'TIMESTAMP']),
+            conversionRule(
+                'DATETIME', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
             conversionRule('TIME', ['STRING', 'TIME']),
-            conversionRule('TIMESTAMP', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
+            conversionRule(
+                'TIMESTAMP', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
             conversionRule('ARRAY', ['ARRAY']),
             conversionRule('STRUCT', ['STRUCT']),
         ]
 
-    def setOptionSqlDialect(self, standard_sql):
+    def setOptionSqlDialect(self, standard_sql=None):
         """
             Set a flag for the SQL dialect.
             It can be `standard` or `legacy`. `standard` will be the default
@@ -140,27 +147,29 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         self.verbose = False
 
-    def setOptionCasting(self, cactingRules):
+    def setOptionCasting(self, castingRules):
         """
             Conversion rules are received as a string, for example: '{"key": "FLOAT64", "datetime": "DATE"}'
 
             The string will be converted to a dict
         """
 
-        if cactingRules:
+        if castingRules:
             # Cast string as a dict
             try:
                 import ast
-                self.castingRules = ast.literal_eval(cactingRules)
+                self.castingRules = ast.literal_eval(castingRules)
             except Exception as e:
-                log_to_postgres("fdw_casting conversion failed: `" + str(e) + "`", ERROR)
+                log_to_postgres(
+                    "fdw_casting conversion failed: `" + str(e) + "`", ERROR)
 
             # For security reasons, ensure that the string was correctly casted as a dict
             try:
                 if type(self.castingRules) is not dict:
                     raise ValueError('fdw_casting format is incorrect.')
             except Exception as e:
-                log_to_postgres("fdw_casting conversion failed: `" + str(e) + "`", ERROR)
+                log_to_postgres(
+                    "fdw_casting conversion failed: `" + str(e) + "`", ERROR)
 
     def getClient(self):
         """
@@ -173,7 +182,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         if self.clients.get(self.key):
             # Verbose log
             if self.verbose:
-                log_to_postgres("Use BqClient instance ID " + str(id(self.clients[self.key])), INFO)
+                log_to_postgres(
+                    "Use BqClient instance ID " + str(id(self.clients[self.key])), INFO)
 
             return self.clients[self.key]
 
@@ -192,14 +202,16 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
             # Verbose log
             if self.verbose:
-                log_to_postgres("Connection to BigQuery client with BqClient instance ID " + str(id(bq)), INFO)
+                log_to_postgres(
+                    "Connection to BigQuery client with BqClient instance ID " + str(id(bq)), INFO)
 
             # Add to pool
             self.clients[self.key] = bq
 
             return bq
         except RuntimeError:
-            log_to_postgres("Connectiont to BigQuery client with key `" + self.key + "` failed", ERROR)
+            log_to_postgres(
+                "Connection to BigQuery client with key `" + self.key + "` failed", ERROR)
 
     def execute(self, quals, columns):
         """
@@ -244,7 +256,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         query += 'SELECT ' + self.buildColumnList(columns)
 
         # Add FROM clause
-        query += " FROM " + self.dataset + "." + self.table + " "
+        query += " FROM `" + self.dataset + "." + self.table + "` "
 
         # Add WHERE clause
         clause, parameters = self.buildWhereClause(quals)
@@ -254,7 +266,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         if self.groupBy:
             groupByColumns = self.buildColumnList(columns, 'GROUP_BY')
             if groupByColumns:
-                query += ' GROUP BY ' + self.buildColumnList(columns, 'GROUP_BY')
+                query += ' GROUP BY ' + \
+                    self.buildColumnList(columns, 'GROUP_BY')
 
         # Verbose log
         if self.verbose:
@@ -278,9 +291,11 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             for column in columns:
                 if column == self.countPseudoColumn:  # Pseudo column to count grouped rows
                     if usage == 'SELECT':
-                        clause += "count(*) " + self.addColumnAlias(column, useAliases) + ", "
+                        clause += "count(*) " + \
+                            self.addColumnAlias(column, useAliases) + ", "
                 elif column == self.partitionPseudoColumn:  # Partition pseudo column
-                    clause += "_PARTITIONTIME " + self.addColumnAlias(column, useAliases) + ", "
+                    clause += "_PARTITIONTIME " + \
+                        self.addColumnAlias(column, useAliases) + ", "
                 else:  # Any other column
                     # Get column data type
                     dataType = self.getBigQueryDatatype(column)
@@ -293,9 +308,12 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                         column = self.setTimeZone(column, dataType)
 
                     # Data type casting
-                    column = self.castColumn(column, columnOriginalName, dataType)
+                    column = self.castColumn(
+                        column, columnOriginalName, dataType)
 
-                    clause += column + " " + self.addColumnAlias(columnOriginalName, useAliases) + ", "
+                    clause += column + " " + \
+                        self.addColumnAlias(
+                            columnOriginalName, useAliases) + ", "
 
             # Remove final `, `
             clause = clause.strip(', ')
@@ -329,16 +347,19 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             castTo = self.castingRules[columnOriginalName]
 
             # Find if we have a matching rule
-            rule = [conversionRule for conversionRule in self.conversionRules if conversionRule.bq_standard_from == dataType.upper()]
+            rule = [
+                conversionRule for conversionRule in self.conversionRules if conversionRule.bq_standard_from == dataType.upper()]
 
             if rule:
                 # Check if casting from the original data type to the new one is supported
                 if castTo.upper() in rule[0].bq_standard_to:
                     return 'CAST(' + column + ' as ' + castTo.upper() + ')'
                 else:
-                    log_to_postgres("Casting from the data type `" + dataType.upper() + "` to the data type `" + castTo.upper() + "` is not permitted.", ERROR)
+                    log_to_postgres("Casting from the data type `" + dataType.upper(
+                    ) + "` to the data type `" + castTo.upper() + "` is not permitted.", ERROR)
             else:
-                log_to_postgres("Casting from the data type `" + dataType.upper() + "` is not permitted.", ERROR)
+                log_to_postgres(
+                    "Casting from the data type `" + dataType.upper() + "` is not permitted.", ERROR)
 
         # Option is not set
         return column
@@ -367,15 +388,20 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             clause += "WHERE "
             for qual in quals:
                 if qual.field_name == self.partitionPseudoColumn:
-                    clause += "_PARTITIONTIME " + str(self.getOperator(qual.operator)) + " ?"
+                    clause += "_PARTITIONTIME " + \
+                        str(self.getOperator(qual.operator)) + " ?"
 
                     # Format date as a timestamp
                     value = qual.value.strftime("%Y-%m-%d 00:00:00")
 
-                    parameters.append(self.setParameter(qual.field_name, 'TIMESTAMP', value))  # Force data type to `TIMESTAMP`
+                    # Force data type to `TIMESTAMP`
+                    parameters.append(self.setParameter(
+                        qual.field_name, 'TIMESTAMP', value))
                 else:
-                    clause += str(qual.field_name) + " " + str(self.getOperator(qual.operator)) + " ?"
-                    parameters.append(self.setParameter(qual.field_name, self.getBigQueryDatatype(qual.field_name), qual.value))
+                    clause += str(qual.field_name) + " " + \
+                        str(self.getOperator(qual.operator)) + " ?"
+                    parameters.append(self.setParameter(
+                        qual.field_name, self.getBigQueryDatatype(qual.field_name), qual.value))
 
                 # Add ` AND `
                 clause += " AND "
@@ -405,7 +431,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         elif operator in mapping:  # Multicorn operator has a BigQuery equivalent
             return mapping[operator]
         else:  # Operator is not supported
-            log_to_postgres("Operator `" + operator + "` is not currently supported", ERROR)
+            log_to_postgres(
+                "Operator `" + operator + "` is not currently supported", ERROR)
 
     def getBigQueryDatatype(self, column, dialect='standard'):
         """
@@ -429,13 +456,14 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Return a default data type in an attempt to save the day
         return 'STRING'
 
-    def setParameter(self, column, type, value):
+    def setParameter(self, column, type_, value):
         """
             Set a parameter in BigQuery client
         """
 
         # Verbose log
         if self.verbose:
-            log_to_postgres("Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` witht the type `" + type + "`", INFO)
+            log_to_postgres(
+                "Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` with the type `" + type_ + "`", INFO)
 
-        return self.bq.setParameter(type, value)
+        return self.bq.setParameter(type_, value)
