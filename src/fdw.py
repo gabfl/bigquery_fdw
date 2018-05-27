@@ -108,7 +108,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             conversionRule('STRUCT', ['STRUCT']),
         ]
 
-    def setOptionSqlDialect(self, standard_sql):
+    def setOptionSqlDialect(self, standard_sql=None):
         """
             Set a flag for the SQL dialect.
             It can be `standard` or `legacy`. `standard` will be the default
