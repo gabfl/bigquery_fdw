@@ -5,7 +5,7 @@ source=bigquery_fdw
 omit =
   setup.py
   src/__main__.py
-  src/tests/*
+  src/unittest/*
   venv/*
 exclude_lines =
   if __name__ == "__main__":

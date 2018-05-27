@@ -182,8 +182,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         if self.clients.get(self.key):
             # Verbose log
             if self.verbose:
-                log_to_postgres("Use BqClient instance ID " +
-                                str(id(self.clients[self.key])), INFO)
+                log_to_postgres(
+                    "Use BqClient instance ID " + str(id(self.clients[self.key])), INFO)
 
             return self.clients[self.key]
 
@@ -358,8 +358,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     log_to_postgres("Casting from the data type `" + dataType.upper(
                     ) + "` to the data type `" + castTo.upper() + "` is not permitted.", ERROR)
             else:
-                log_to_postgres("Casting from the data type `" +
-                                dataType.upper() + "` is not permitted.", ERROR)
+                log_to_postgres(
+                    "Casting from the data type `" + dataType.upper() + "` is not permitted.", ERROR)
 
         # Option is not set
         return column
@@ -431,8 +431,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         elif operator in mapping:  # Multicorn operator has a BigQuery equivalent
             return mapping[operator]
         else:  # Operator is not supported
-            log_to_postgres("Operator `" + operator +
-                            "` is not currently supported", ERROR)
+            log_to_postgres(
+                "Operator `" + operator + "` is not currently supported", ERROR)
 
     def getBigQueryDatatype(self, column, dialect='standard'):
         """
@@ -463,7 +463,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         # Verbose log
         if self.verbose:
-            log_to_postgres("Add query parameter `" + self.bq.varToString(value) +
-                            "` for column `" + column + "` with the type `" + type + "`", INFO)
+            log_to_postgres(
+                "Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` with the type `" + type + "`", INFO)
 
         return self.bq.setParameter(type, value)

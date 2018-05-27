@@ -4,7 +4,7 @@ python:
 before_install:
   - sudo apt-get update
   - sudo apt-get install --yes postgresql-server-dev-10 python3-setuptools python-dev python3-dev make gcc
-  # WIll clone and Multicorn
+  # Will clone and compile Multicorn
   - git clone git://github.com/Kozea/Multicorn.git /opt/Multicorn
   - cd /opt/Multicorn
   # `make` needs sudo and will build Multicorn with Python 2.7
