@@ -2,6 +2,26 @@ language: python
 python:
   - "3.6"
 before_install:
-  - pip install pycodestyle
+  - sudo apt-get update
+  - sudo apt-get install --yes postgresql-server-dev-10 python3-setuptools python-dev python3-dev make gcc
+  # WIll clone and Multicorn
+  - git clone git://github.com/Kozea/Multicorn.git /opt/Multicorn
+  - cd /opt/Multicorn
+  # `make` needs sudo and will build Multicorn with Python 2.7
+  - sudo make && sudo make install
+  # We can then re-install Multicorn on Python 3.x
+  - sudo chown -R travis.travis /opt/Multicorn
+  - export PYTHON_OVERRIDE=python3
+  - python3 setup.py install
+  # Back to bigquery_fdw's directory
+  - cd -
+  # Installing packages
+  - pip install pycodestyle codecov
+  - python3 setup.py install
 script:
   - pycodestyle --exclude=venv --ignore=E501 .
+  - pytest
+  - coverage run --branch --source=. -m unittest discover -bv
+  - coverage report -m
+after_success:
+  - codecov
