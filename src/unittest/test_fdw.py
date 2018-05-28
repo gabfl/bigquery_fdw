@@ -1,5 +1,6 @@
 import unittest
 from collections import OrderedDict
+import datetime
 
 import multicorn
 from google.cloud import bigquery
@@ -256,6 +257,22 @@ class Test(unittest.TestCase):
             self.assertIsInstance(
                 parameter, bigquery.query.ScalarQueryParameter)
 
+    def test_buildWhereClause_2(self):
+        # Test with partition pseudo column
+        q = self.quals
+        q.append(multicorn.Qual(field_name='partition_date',
+                                operator='=',
+                                value=datetime.datetime(2018, 5, 27, 19, 53, 42).date()))
+
+        self.fdw.bq = self.fdw.getClient()
+        clause, parameters = self.fdw.buildWhereClause(q)
+
+        self.assertIsInstance(clause, str)
+        self.assertIsInstance(parameters, list)
+        for parameter in parameters:
+            self.assertIsInstance(
+                parameter, bigquery.query.ScalarQueryParameter)
+
     def test_getOperator(self):
         self.assertEqual(self.fdw.getOperator('='), '=')
 
@@ -271,6 +288,16 @@ class Test(unittest.TestCase):
     def test_getBigQueryDatatype_2(self):
         self.assertEqual(self.fdw.getBigQueryDatatype(
             'number', 'legacy'), 'INTEGER')
+
+    def test_getBigQueryDatatype_3(self):
+        # Test with a column that has an invalid type
+        c = self.columns
+        c['some_column'] = multicorn.ColumnDefinition(
+            column_name='some_column', type_oid=0, base_type_name='invalid_type')
+        self.fdw.columns = c
+
+        # Should default to `STRING`
+        self.assertEqual(self.fdw.getBigQueryDatatype('some_column'), 'STRING')
 
     def test_setParameter(self):
         self.fdw.bq = self.fdw.getClient()
