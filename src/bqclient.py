@@ -15,6 +15,7 @@ class BqClient:
     # Set vars
     client = None
     queryJob = None
+    location = None  # Override dataset location
 
     def setClient(self, jsonKeyPath):
         """
@@ -24,7 +25,8 @@ class BqClient:
         self.client = bigquery.Client.from_service_account_json(jsonKeyPath)
 
         if not self.client:
-            raise RuntimeError('BigQuery client is not instantiated properly (from `setClient`).')
+            raise RuntimeError(
+                'BigQuery client is not instantiated properly (from `setClient`).')
 
     def getClient(self):
         """
@@ -44,18 +46,21 @@ class BqClient:
                 job_config = bigquery.QueryJobConfig()
                 job_config.query_parameters = parameters
 
-                self.queryJob = self.client.query(query, job_config=job_config)
+                self.queryJob = self.client.query(
+                    query, job_config=job_config, location=None)
             else:  # Non parameterized query
-                self.queryJob = self.client.query(query)
+                self.queryJob = self.client.query(query, location=None)
 
             # Set SQL dialect
-            if sqlDialect == 'legacy':
-                self.queryJob.UseLegacySQL = True
-            else:
-                self.queryJob.UseLegacySQL = False
+            self.queryJob.UseLegacySQL = False
+            # if sqlDialect == 'legacy':
+            #     self.queryJob.UseLegacySQL = True
+            # else:
+            #     self.queryJob.UseLegacySQL = False
 
         else:
-            raise RuntimeError('BigQuery client is not instantiated properly (from `runQuery`).')
+            raise RuntimeError(
+                'BigQuery client is not instantiated properly (from `runQuery`).')
 
     def getQueryJob(self):
         """
@@ -75,7 +80,7 @@ class BqClient:
         else:
             raise RuntimeError('No query is pending a result.')
 
-    def setParameter(self, type, value):
+    def setParameter(self, type_, value):
         """
             Prepare a parameter for a parameterized query
             As documented by Google, only standard SQL syntax supports parameters in queries
@@ -87,7 +92,7 @@ class BqClient:
             # Set the name to None to use positional parameters (? symbol
             # in the query).  Note that you cannot mix named and positional
             # parameters.
-            None, type, self.varToString(value))
+            None, type_, self.varToString(value))
 
     def varToString(self, var):
         """

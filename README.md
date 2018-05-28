@@ -1,5 +1,10 @@
 # bigquery_fdw: BigQuery Foreign Data Wrapper for PostgreSQL
 
+[![Pypi](https://img.shields.io/pypi/v/bigquery-fdw.svg)](https://pypi.org/project/bigquery-fdw/)
+[![Build Status](https://travis-ci.org/gabfl/bigquery_fdw.svg?branch=master)](https://travis-ci.org/gabfl/bigquery_fdw)
+[![codecov](https://codecov.io/gh/gabfl/bigquery_fdw/branch/master/graph/badge.svg)](https://codecov.io/gh/gabfl/bigquery_fdw)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/gabfl/bigquery_fdw/master/LICENSE)
+
 bigquery_fdw is a BigQuery foreign data wrapper for PostgreSQL using [Multicorn](https://github.com/Kozea/Multicorn).
 
 It allows to write queries in PostgreSQL SQL syntax using a foreign table. It supports most of BigQuery's [data types](docs/data_types.md) and [operators](docs/operators.md).
