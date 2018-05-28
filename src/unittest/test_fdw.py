@@ -17,7 +17,7 @@ class Test(unittest.TestCase):
             'fdw_key': '/opt/key/key.json',
             'fdw_dataset': 'bigquery-public-data.usa_names',
             'fdw_table': 'usa_1910_current',
-            'fdw_verbose': False,
+            'fdw_verbose': 'true',
             'fdw_sql_dialect': 'standard',
             'fdw_group': 'false',
             'fdw_casting': 'false',
