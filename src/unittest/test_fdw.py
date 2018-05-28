@@ -124,11 +124,57 @@ class Test(unittest.TestCase):
     def test_buildQuery(self):
         self.fdw.bq = self.fdw.getClient()
         query, parameters = self.fdw.buildQuery(self.quals, self.columns)
+
         self.assertIsInstance(query, str)
         self.assertIsInstance(parameters, list)
         for parameter in parameters:
             self.assertIsInstance(
                 parameter, bigquery.query.ScalarQueryParameter)
+
+    def test_buildColumnList(self):
+        self.assertEqual(self.fdw.buildColumnList(
+            self.columns), 'state  as state, gender  as gender, year  as year, name  as name, number  as number')
+
+    def test_buildColumnList_2(self):
+        self.assertEqual(self.fdw.buildColumnList(
+            self.columns, 'GROUP_BY'), 'state , gender , year , name , number')
+
+    def test_setTimeZone(self):
+        self.fdw.convertToTz = 'US/Eastern'
+        self.assertEqual(self.fdw.setTimeZone(
+            'column1', 'DATE').strip(), 'DATE(column1, "US/Eastern")')
+
+    def test_setTimeZone_2(self):
+        self.fdw.convertToTz = 'US/Eastern'
+        self.assertEqual(self.fdw.setTimeZone(
+            'column1', 'DATETIME').strip(), 'DATETIME(column1, "US/Eastern")')
+
+    def test_setTimeZone_3(self):
+        self.fdw.convertToTz = None
+        self.assertEqual(self.fdw.setTimeZone(
+            'column1', 'DATE').strip(), 'column1')
+
+    def test_setTimeZone_4(self):
+        self.fdw.convertToTz = None
+        self.assertEqual(self.fdw.setTimeZone(
+            'column1', 'DATETIME').strip(), 'column1')
+
+    def test_castColumn(self):
+        # Options are a dict casted as a string
+        casting = '{"number": "STRING"}'
+        self.fdw.setOptionCasting(casting)
+
+        self.assertEqual(self.fdw.castColumn(
+            'number', 'number', 'INT64'), 'CAST(number as STRING)')
+
+    def test_castColumn_2(self):
+        # Options are a dict casted as a string
+        casting = '{"number": "STRING"}'
+        self.fdw.setOptionCasting(casting)
+
+        # Casting should fail on columns not in the casting rules
+        self.assertEqual(self.fdw.castColumn(
+            'year', 'year', 'INT64'), 'year')
 
     def test_addColumnAlias(self):
         self.assertEqual(self.fdw.addColumnAlias(
@@ -137,3 +183,13 @@ class Test(unittest.TestCase):
     def test_addColumnAlias_2(self):
         self.assertEqual(self.fdw.addColumnAlias(
             'some_column', False), '')
+
+    def test_buildWhereClause(self):
+        self.fdw.bq = self.fdw.getClient()
+        clause, parameters = self.fdw.buildWhereClause(self.quals)
+
+        self.assertIsInstance(clause, str)
+        self.assertIsInstance(parameters, list)
+        for parameter in parameters:
+            self.assertIsInstance(
+                parameter, bigquery.query.ScalarQueryParameter)
