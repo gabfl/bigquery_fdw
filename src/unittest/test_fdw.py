@@ -181,6 +181,19 @@ class Test(unittest.TestCase):
             self.assertIsInstance(
                 parameter, bigquery.query.ScalarQueryParameter)
 
+    def test_buildQuery_4(self):
+        # Test with grouping option but no columns sent to buildQuery()
+        self.fdw.groupBy = True
+
+        self.fdw.bq = self.fdw.getClient()
+        query, parameters = self.fdw.buildQuery(self.quals, None)
+
+        self.assertIsInstance(query, str)
+        self.assertIsInstance(parameters, list)
+        for parameter in parameters:
+            self.assertIsInstance(
+                parameter, bigquery.query.ScalarQueryParameter)
+
     def test_buildColumnList(self):
         self.assertEqual(self.fdw.buildColumnList(
             self.columns), 'state  as state, gender  as gender, year  as year, name  as name, number  as number')
