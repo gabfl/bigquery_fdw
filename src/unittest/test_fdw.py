@@ -103,6 +103,11 @@ class Test(unittest.TestCase):
             self.assertTrue(column in ['column1', 'column2', 'column3'])
             self.assertTrue(cast in ['STRING', 'DATE', 'TIMESTAMP'])
 
+    def test_setOptionCasting_2(self):
+        # Nothing should happen if no casting options have been set
+        casting = ''
+        self.assertIsNone(self.fdw.setOptionCasting(casting))
+
     def test_getClient(self):
         self.fdw.setClient()
         self.assertIsInstance(self.fdw.getClient(), BqClient)
@@ -131,6 +136,19 @@ class Test(unittest.TestCase):
             self.assertIsInstance(
                 parameter, bigquery.query.ScalarQueryParameter)
 
+    def test_buildQuery_2(self):
+        # Test with grouping option
+        self.fdw.groupBy = True
+
+        self.fdw.bq = self.fdw.getClient()
+        query, parameters = self.fdw.buildQuery(self.quals, self.columns)
+
+        self.assertIsInstance(query, str)
+        self.assertIsInstance(parameters, list)
+        for parameter in parameters:
+            self.assertIsInstance(
+                parameter, bigquery.query.ScalarQueryParameter)
+
     def test_buildColumnList(self):
         self.assertEqual(self.fdw.buildColumnList(
             self.columns), 'state  as state, gender  as gender, year  as year, name  as name, number  as number')
@@ -138,6 +156,50 @@ class Test(unittest.TestCase):
     def test_buildColumnList_2(self):
         self.assertEqual(self.fdw.buildColumnList(
             self.columns, 'GROUP_BY'), 'state , gender , year , name , number')
+
+    def test_buildColumnList_3(self):
+        # Test with counting pseudo column
+        c = self.columns
+        c['_fdw_count'] = multicorn.ColumnDefinition(
+            column_name='_fdw_count', type_oid=20, base_type_name='bigint')
+
+        self.assertEqual(self.fdw.buildColumnList(
+            c), 'state  as state, gender  as gender, year  as year, name  as name, number  as number, count(*)  as _fdw_count')
+
+    def test_buildColumnList_4(self):
+        # Test with counting pseudo column
+        c = self.columns
+        c['_fdw_count'] = multicorn.ColumnDefinition(
+            column_name='_fdw_count', type_oid=20, base_type_name='bigint')
+
+        self.assertEqual(self.fdw.buildColumnList(
+            c, 'GROUP_BY'), 'state , gender , year , name , number')
+
+    def test_buildColumnList_5(self):
+        # Test with partition pseudo column
+        c = self.columns
+        c['partition_date'] = multicorn.ColumnDefinition(
+            column_name='partition_date', type_oid=0, base_type_name='date')
+
+        self.assertEqual(self.fdw.buildColumnList(
+            c), 'state  as state, gender  as gender, year  as year, name  as name, number  as number, _PARTITIONTIME  as partition_date')
+
+    def test_buildColumnList_6(self):
+        # Test with partition pseudo column
+        c = self.columns
+        c['partition_date'] = multicorn.ColumnDefinition(
+            column_name='partition_date', type_oid=0, base_type_name='date')
+
+        self.assertEqual(self.fdw.buildColumnList(
+            c, 'GROUP_BY'), 'state , gender , year , name , number , _PARTITIONTIME')
+
+    def test_buildColumnList_7(self):
+        # Test `SELECT *`
+        self.assertEqual(self.fdw.buildColumnList(None), '*')
+
+    def test_buildColumnList_8(self):
+        # Test no columns when grouping by
+        self.assertEqual(self.fdw.buildColumnList(None, 'GROUP_BY'), '')
 
     def test_setTimeZone(self):
         self.fdw.convertToTz = 'US/Eastern'
