@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from collections import OrderedDict
 import datetime
 
@@ -135,6 +136,12 @@ class Test(unittest.TestCase):
     def test_setClient_2(self):
         self.fdw.verbose = False
         self.assertIsInstance(self.fdw.setClient(), BqClient)
+
+    @patch.object(bigquery.Client, 'from_service_account_json')
+    def test_setClient_3(self, patched):
+        # Should return `None` and call log_to_postgres() if the BigQuery client cannot be set correctly
+        patched.return_value = None
+        self.assertIsNone(self.fdw.setClient())
 
     def test_execute(self):
         self.fdw.setClient()

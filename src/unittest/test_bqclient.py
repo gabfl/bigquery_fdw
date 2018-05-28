@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 import datetime
 
 from google.cloud import bigquery
@@ -25,6 +26,12 @@ class Test(unittest.TestCase):
     def test_setClient(self):
         self.bc.setClient(self.key)
         self.assertIsInstance(self.bc.client, bigquery.client.Client)
+
+    @patch.object(bigquery.Client, 'from_service_account_json')
+    def test_setClient_2(self, patched):
+        # Should return a RuntimeError if the BigQuery client cannot be set correctly
+        patched.return_value = None
+        self.assertRaises(RuntimeError, self.bc.setClient, self.key)
 
     def test_getClient(self):
         self.bc.setClient(self.key)
