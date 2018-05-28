@@ -51,8 +51,9 @@ class Test(unittest.TestCase):
 
     def test_setOptions_2(self):
         # Should create a `KeyError` exception which should call log_to_postgres()
-        del self.fdw.dataset
-        self.assertIsNone(self.fdw.setOptions(self.options))
+        o = self.options
+        del o['fdw_dataset']
+        self.assertIsNone(self.fdw.setOptions(o))
 
     def test_setDatatypes(self):
         self.fdw.setDatatypes()
