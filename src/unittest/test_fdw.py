@@ -193,3 +193,24 @@ class Test(unittest.TestCase):
         for parameter in parameters:
             self.assertIsInstance(
                 parameter, bigquery.query.ScalarQueryParameter)
+
+    def test_getOperator(self):
+        self.assertEqual(self.fdw.getOperator('='), '=')
+
+    def test_getOperator_2(self):
+        self.assertEqual(self.fdw.getOperator('~~'), 'LIKE')
+
+    def test_getOperator_3(self):
+        self.assertEqual(self.fdw.getOperator('!~~'), 'NOT LIKE')
+
+    def test_getBigQueryDatatype(self):
+        self.assertEqual(self.fdw.getBigQueryDatatype('number'), 'INT64')
+
+    def test_getBigQueryDatatype_2(self):
+        self.assertEqual(self.fdw.getBigQueryDatatype(
+            'number', 'legacy'), 'INTEGER')
+
+    def test_setParameter(self):
+        self.fdw.bq = self.fdw.getClient()
+        self.assertIsInstance(self.fdw.setParameter(
+            'column', 'STRING', 'some string'), bigquery.query.ScalarQueryParameter)
