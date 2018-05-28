@@ -49,6 +49,11 @@ class Test(unittest.TestCase):
     def test_setOptions(self):
         self.assertIsNone(self.fdw.setOptions(self.options))
 
+    def test_setOptions_2(self):
+        # Should create a `KeyError` exception which should call log_to_postgres()
+        del self.fdw.dataset
+        self.assertIsNone(self.fdw.setOptions(self.options))
+
     def test_setDatatypes(self):
         self.fdw.setDatatypes()
         self.assertIsInstance(self.fdw.datatypes, list)
@@ -77,6 +82,11 @@ class Test(unittest.TestCase):
     def test_setOptionSqlDialect_3(self):
         self.fdw.setOptionSqlDialect('non_existent')
         # Should fallback to `standard`
+        self.assertEqual(self.fdw.dialect, 'standard')
+
+    def test_setOptionSqlDialect_4(self):
+        self.fdw.verbose = False
+        self.fdw.setOptionSqlDialect()
         self.assertEqual(self.fdw.dialect, 'standard')
 
     def test_setOptionGroupBy(self):
@@ -113,7 +123,16 @@ class Test(unittest.TestCase):
         self.fdw.setClient()
         self.assertIsInstance(self.fdw.getClient(), BqClient)
 
+    def test_getClient_2(self):
+        self.fdw.verbose = False
+        self.fdw.setClient()
+        self.assertIsInstance(self.fdw.getClient(), BqClient)
+
     def test_setClient(self):
+        self.assertIsInstance(self.fdw.setClient(), BqClient)
+
+    def test_setClient_2(self):
+        self.fdw.verbose = False
         self.assertIsInstance(self.fdw.setClient(), BqClient)
 
     def test_execute(self):
@@ -138,6 +157,17 @@ class Test(unittest.TestCase):
                 parameter, bigquery.query.ScalarQueryParameter)
 
     def test_buildQuery_2(self):
+        self.fdw.verbose = False
+        self.fdw.bq = self.fdw.getClient()
+        query, parameters = self.fdw.buildQuery(self.quals, self.columns)
+
+        self.assertIsInstance(query, str)
+        self.assertIsInstance(parameters, list)
+        for parameter in parameters:
+            self.assertIsInstance(
+                parameter, bigquery.query.ScalarQueryParameter)
+
+    def test_buildQuery_3(self):
         # Test with grouping option
         self.fdw.groupBy = True
 
@@ -195,10 +225,19 @@ class Test(unittest.TestCase):
             c, 'GROUP_BY'), 'state , gender , year , name , number , _PARTITIONTIME')
 
     def test_buildColumnList_7(self):
+        # Test with a datetime
+        c = self.columns
+        c['datetime'] = multicorn.ColumnDefinition(
+            column_name='datetime', type_oid=0, base_type_name='timestamp without time zone')
+
+        self.assertEqual(self.fdw.buildColumnList(
+            c, 'GROUP_BY'), 'state , gender , year , name , number , datetime')
+
+    def test_buildColumnList_8(self):
         # Test `SELECT *`
         self.assertEqual(self.fdw.buildColumnList(None), '*')
 
-    def test_buildColumnList_8(self):
+    def test_buildColumnList_9(self):
         # Test no columns when grouping by
         self.assertEqual(self.fdw.buildColumnList(None, 'GROUP_BY'), '')
 
@@ -239,6 +278,15 @@ class Test(unittest.TestCase):
         self.assertEqual(self.fdw.castColumn(
             'year', 'year', 'INT64'), 'year')
 
+    def test_castColumn_3(self):
+        # Options are a dict casted as a string
+        casting = '{"number": "SOME_INVALID_TYPE"}'
+        self.fdw.setOptionCasting(casting)
+
+        # Casting should fail on invalid types
+        self.assertEqual(self.fdw.castColumn(
+            'number', 'number', 'INT64'), 'number')
+
     def test_addColumnAlias(self):
         self.assertEqual(self.fdw.addColumnAlias(
             'some_column'), ' as some_column')
@@ -273,6 +321,16 @@ class Test(unittest.TestCase):
             self.assertIsInstance(
                 parameter, bigquery.query.ScalarQueryParameter)
 
+    def test_buildWhereClause_3(self):
+        # Test with no quals
+        self.fdw.bq = self.fdw.getClient()
+        clause, parameters = self.fdw.buildWhereClause(None)
+
+        self.assertIsInstance(clause, str)
+        self.assertEqual(clause, '')
+        self.assertIsInstance(parameters, list)
+        self.assertEqual(parameters, [])
+
     def test_getOperator(self):
         self.assertEqual(self.fdw.getOperator('='), '=')
 
@@ -281,6 +339,10 @@ class Test(unittest.TestCase):
 
     def test_getOperator_3(self):
         self.assertEqual(self.fdw.getOperator('!~~'), 'NOT LIKE')
+
+    def test_getOperator_4(self):
+        # Test an invalid operator, should return `None` and call log_to_postgres()
+        self.assertIsNone(self.fdw.getOperator('**'))
 
     def test_getBigQueryDatatype(self):
         self.assertEqual(self.fdw.getBigQueryDatatype('number'), 'INT64')
