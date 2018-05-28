@@ -456,7 +456,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Return a default data type in an attempt to save the day
         return 'STRING'
 
-    def setParameter(self, column, type, value):
+    def setParameter(self, column, type_, value):
         """
             Set a parameter in BigQuery client
         """
@@ -464,6 +464,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Verbose log
         if self.verbose:
             log_to_postgres(
-                "Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` with the type `" + type + "`", INFO)
+                "Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` with the type `" + type_ + "`", INFO)
 
-        return self.bq.setParameter(type, value)
+        return self.bq.setParameter(type_, value)
