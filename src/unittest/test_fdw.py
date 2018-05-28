@@ -301,6 +301,15 @@ class Test(unittest.TestCase):
         self.assertEqual(self.fdw.castColumn(
             'number', 'number', 'INT64'), 'number')
 
+    def test_castColumn_4(self):
+        # Options are a dict casted as a string
+        casting = '{"number": "STRING"}'
+        self.fdw.setOptionCasting(casting)
+
+        # Casting should fail on invalid types
+        self.assertEqual(self.fdw.castColumn(
+            'number', 'number', 'SOME_INVALID_TYPE'), 'number')
+
     def test_addColumnAlias(self):
         self.assertEqual(self.fdw.addColumnAlias(
             'some_column'), ' as some_column')
