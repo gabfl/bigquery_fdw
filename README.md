@@ -23,9 +23,15 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
  - PostgreSQL >= 9.5
  - Python 3
 
-## Dependencies
+## Get started
 
-### Dependencies required to install bigquery_fdw:
+### Using docker
+
+See [getting started with Docker](docs/docker.md)
+
+### Installation on Debian/Ubuntu
+
+#### Dependencies required to install bigquery_fdw:
 
 You need to install the following dependencies:
 
@@ -40,12 +46,7 @@ easy_install3 pip
 
 For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-10`.
 
-### Major dependencies installed automatically during the installation process:
-
- - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](https://github.com/Kozea/Multicorn)
-
-## Installation
+#### Installation
 
 ```bash
 # Install `setuptools` if necessary
@@ -59,6 +60,11 @@ make && make install
 # Install bigquery_fdw
 pip3 install bigquery-fdw
 ```
+
+Major dependencies installed automatically during the installation process:
+
+ - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
+ - [Multicorn](https://github.com/Kozea/Multicorn)
 
 ## Usage
 
