@@ -25,7 +25,7 @@ before_script:
   - mkdir /opt/key/
   - openssl aes-256-cbc -K $encrypted_c2c405a197db_key -iv $encrypted_c2c405a197db_iv -in src/unittest/utils/key/key.json.enc -out /opt/key/key.json -d
   #- psql -c 'create database fdw;' -U postgres
-  #- psql -f src/unittest/utils/sql/setup.sql fdw -U postgres
+  #- psql -f sample_sql/setup.sql fdw -U postgres
 script:
   - pycodestyle --exclude=venv --ignore=E501 .
   - pytest

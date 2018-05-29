@@ -23,7 +23,7 @@ docker run \
 
 ```bash
 python3 setup.py install
-su postgres -c 'psql -f src/unittest/utils/sql/setup.sql -d fdw'
+su postgres -c 'psql -f sample_sql/setup.sql -d fdw'
 ```
 
 ### Run your first query
