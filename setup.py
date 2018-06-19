@@ -18,7 +18,11 @@ setup(
     packages=['bigquery_fdw'],
     package_dir={'bigquery_fdw': 'src'},
     # external dependencies
-    install_requires=['argparse', 'google-cloud-bigquery==1.1.0'],
+    install_requires=[
+        'argparse',
+        'google-cloud-bigquery==1.1.0',
+        'google-auth-oauthlib==0.2.0',
+    ],
     entry_points={
         'console_scripts': [
             # 'bigquery_fdw = bigquery_fdw.fdw:main',
