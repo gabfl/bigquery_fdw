@@ -28,8 +28,7 @@ before_script:
   #- psql -f sample_sql/setup.sql fdw -U postgres
 script:
   - pycodestyle --exclude=venv --ignore=E501 .
-  - pytest
-  - coverage run --branch --source=. -m unittest discover -bv
+  - coverage run --source=. -m pytest
   - coverage report -m
 after_success:
   - codecov
