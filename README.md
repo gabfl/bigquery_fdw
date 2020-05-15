@@ -38,20 +38,14 @@ You need to install the following dependencies:
 ```bash
 # Install required packages
 apt-get update
-apt-get install --yes postgresql-server-dev-10 python3-setuptools python3-dev make gcc git
-
-# Install pip3
-easy_install3 pip
+apt-get install --yes postgresql-server-dev-12 python3-setuptools python3-dev make gcc git
 ```
 
-For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-10`.
+For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-12`.
 
 #### Installation
 
 ```bash
-# Install `setuptools` if necessary
-pip3 install --upgrade setuptools
-
 # Install Multicorn
 git clone git://github.com/Kozea/Multicorn.git && cd Multicorn
 export PYTHON_OVERRIDE=python3

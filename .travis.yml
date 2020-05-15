@@ -1,20 +1,21 @@
+dist: bionic
 language: python
 python:
   - "3.6"
 addons:
-  postgresql: "9.6"
+  postgresql: "11"
+  apt:
+    packages:
+    - postgresql-server-dev-11
 before_install:
   - sudo apt-get update
-  - sudo apt-get install --yes postgresql-server-dev-9.6 python3-setuptools python-dev python3-dev make gcc
+  - sudo apt-get install --yes python3-setuptools python3.6-dev make gcc
   # Will clone and compile Multicorn
   - git clone git://github.com/Kozea/Multicorn.git /opt/Multicorn
   - cd /opt/Multicorn
-  # `make` needs sudo and will build Multicorn with Python 2.7
-  - sudo make && sudo make install
-  # We can then re-install Multicorn on Python 3.x
-  - sudo chown -R travis.travis /opt/Multicorn
-  - export PYTHON_OVERRIDE=python3
-  - python3 setup.py install
+  - sudo mkdir -p /usr/share/doc/postgresql-doc-11 /usr/lib/postgresql/11/lib/bitcode/
+  - sudo chmod 777 /usr/share/doc/postgresql-doc-11 /usr/lib/postgresql/11/lib/ /usr/share/postgresql/11/extension/ /usr/lib/postgresql/11/lib/bitcode/
+  - make && make install
   # Back to bigquery_fdw's directory
   - cd -
   # Installing packages
