@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/gabfl/bigquery_fdw/branch/master/graph/badge.svg)](https://codecov.io/gh/gabfl/bigquery_fdw)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/gabfl/bigquery_fdw/master/LICENSE)
 
-bigquery_fdw is a BigQuery foreign data wrapper for PostgreSQL using [Multicorn](https://github.com/Kozea/Multicorn).
+bigquery_fdw is a BigQuery foreign data wrapper for PostgreSQL using [Multicorn](https://github.com/Segfault-Inc/Multicorn).
 
 It allows to write queries in PostgreSQL SQL syntax using a foreign table. It supports most of BigQuery's [data types](docs/data_types.md) and [operators](docs/operators.md).
 
@@ -58,7 +58,7 @@ pip3 install bigquery-fdw
 Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](https://github.com/Kozea/Multicorn)
+ - [Multicorn](https://github.com/Segfault-Inc/Multicorn)
 
 ## Usage
 
