@@ -38,10 +38,10 @@ You need to install the following dependencies:
 ```bash
 # Install required packages
 apt-get update
-apt-get install --yes postgresql-server-dev-12 python3-setuptools python3-dev make gcc git
+apt-get install --yes postgresql-server-dev-13 python3-setuptools python3-dev make gcc git
 ```
 
-For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-12`.
+For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-13`.
 
 #### Installation
 
