@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/gabfl/bigquery_fdw/branch/master/graph/badge.svg)](https://codecov.io/gh/gabfl/bigquery_fdw)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/gabfl/bigquery_fdw/master/LICENSE)
 
-bigquery_fdw is a BigQuery foreign data wrapper for PostgreSQL using [Multicorn](https://github.com/Kozea/Multicorn).
+bigquery_fdw is a BigQuery foreign data wrapper for PostgreSQL using [Multicorn](https://github.com/Segfault-Inc/Multicorn).
 
 It allows to write queries in PostgreSQL SQL syntax using a foreign table. It supports most of BigQuery's [data types](docs/data_types.md) and [operators](docs/operators.md).
 
@@ -38,16 +38,16 @@ You need to install the following dependencies:
 ```bash
 # Install required packages
 apt-get update
-apt-get install --yes postgresql-server-dev-12 python3-setuptools python3-dev make gcc git
+apt-get install --yes postgresql-server-dev-13 python3-setuptools python3-dev make gcc git
 ```
 
-For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-12`.
+For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-13`.
 
 #### Installation
 
 ```bash
 # Install Multicorn
-git clone git://github.com/Kozea/Multicorn.git && cd Multicorn
+git clone git://github.com/Segfault-Inc/Multicorn.git && cd Multicorn
 export PYTHON_OVERRIDE=python3
 make && make install
 
@@ -58,7 +58,7 @@ pip3 install bigquery-fdw
 Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](https://github.com/Kozea/Multicorn)
+ - [Multicorn](https://github.com/Segfault-Inc/Multicorn)
 
 ## Usage
 
