@@ -47,7 +47,7 @@ For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-
 
 ```bash
 # Install Multicorn
-git clone git://github.com/Kozea/Multicorn.git && cd Multicorn
+git clone git://github.com/Segfault-Inc/Multicorn.git && cd Multicorn
 export PYTHON_OVERRIDE=python3
 make && make install
 
