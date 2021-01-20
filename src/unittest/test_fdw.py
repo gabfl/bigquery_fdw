@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 from collections import OrderedDict
 import datetime
+import os
 
 import multicorn
 from google.cloud import bigquery
@@ -136,11 +137,10 @@ class Test(unittest.TestCase):
         self.fdw.verbose = False
         self.assertIsInstance(self.fdw.setClient(), BqClient)
 
-    @patch.object(bigquery.Client, 'from_service_account_json')
-    def test_setClient_3(self, patched):
+    def test_setClient_3(self):
         # Should return `None` and call log_to_postgres() if the BigQuery client cannot be set correctly
-        patched.return_value = None
-        self.assertIsNone(self.fdw.setClient())
+        with patch.dict(os.environ, {'GOOGLE_APPLICATION_CREDENTIALS': ''}):
+            self.assertIsNone(self.fdw.setClient())
 
     def test_execute(self):
         self.fdw.setClient()

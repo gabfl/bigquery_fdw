@@ -8,6 +8,7 @@
 import datetime
 
 from google.cloud import bigquery
+from google import auth
 
 
 class BqClient:
@@ -22,11 +23,11 @@ class BqClient:
             Set BigQuery client with a Json key
         """
 
-        self.client = bigquery.Client()
-
-        if not self.client:
+        try:
+            self.client = bigquery.Client()
+        except auth.exceptions.DefaultCredentialsError as e:
             raise RuntimeError(
-                'BigQuery client is not instantiated properly (from `setClient`).')
+                'BigQuery client is not instantiated properly:' + e)
 
     def getClient(self):
         """
