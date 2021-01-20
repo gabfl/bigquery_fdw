@@ -80,8 +80,7 @@ CREATE FOREIGN TABLE my_bigquery_table (
 ) SERVER bigquery_srv
 OPTIONS (
     fdw_dataset  'my_dataset',
-    fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/key.json'
+    fdw_table 'my_table'
 );
 ```
 
@@ -93,7 +92,6 @@ List of options implemented in `CREATE FOREIGN TABLE` syntax:
 |-----|----|----|
 | `fdw_dataset` | - | BigQuery dataset name |
 | `fdw_table` | - | BigQuery table name |
-| `fdw_key` | - | Path to private Json key (See [Key storage recommendations](docs/key_storage.md)) |
 | `fdw_convert_tz` | - | Convert BigQuery time zone for dates and timestamps to selected time zone. Example: `'US/Eastern'`. |
 | `fdw_group` |  `'false'` | See [Remote grouping and counting](docs/remote_grouping.md). |
 | `fdw_casting` |  - | See [Casting](docs/casting.md). |

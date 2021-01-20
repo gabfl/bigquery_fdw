@@ -41,7 +41,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         # Set options at class scope
         try:
-            self.key = options['fdw_key']
             self.dataset = options['fdw_dataset']
             self.table = options['fdw_table']
             self.convertToTz = options.get('fdw_convert_tz')
@@ -59,7 +58,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             self.setOptionCasting(options.get('fdw_casting'))
         except KeyError:
             log_to_postgres(
-                "You must specify these options when creating the FDW: fdw_key, fdw_dataset, fdw_table", ERROR)
+                "You must specify these options when creating the FDW: fdw_dataset, fdw_table", ERROR)
 
     def setDatatypes(self):
         """
@@ -179,13 +178,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         """
 
         # Returns an existing instance
-        if self.clients.get(self.key):
-            # Verbose log
-            if self.verbose:
-                log_to_postgres(
-                    "Use BqClient instance ID " + str(id(self.clients[self.key])), INFO)
-
-            return self.clients[self.key]
+        if self.client:
+            return self.client
 
         # Or create a new instance
         return self.setClient()
@@ -198,7 +192,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         try:
             # Attempt connection
             bq = BqClient()
-            bq.setClient(self.key)
+            bq.setClient()
 
             # Verbose log
             if self.verbose:
@@ -206,12 +200,12 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                     "Connection to BigQuery client with BqClient instance ID " + str(id(bq)), INFO)
 
             # Add to pool
-            self.clients[self.key] = bq
+            self.client = bq
 
             return bq
         except RuntimeError:
             log_to_postgres(
-                "Connection to BigQuery client with key `" + self.key + "` failed", ERROR)
+                "Connection to BigQuery client failed", ERROR)
 
     def execute(self, quals, columns):
         """
@@ -225,7 +219,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         #     log_to_postgres('Columns...', INFO)
         #     log_to_postgres(columns, INFO)
 
-        # Returns instance of BqClient for `self.key`
+        # Returns instance of BqClient
         self.bq = self.getClient()
 
         # Prepare query

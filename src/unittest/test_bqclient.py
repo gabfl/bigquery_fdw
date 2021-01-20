@@ -10,7 +10,6 @@ from ..bqclient import BqClient
 class Test(unittest.TestCase):
 
     def setUp(self):
-        self.key = '/opt/key/key.json'
         self.query = 'SELECT count(*) FROM `bigquery-public-data.usa_names.usa_1910_current` WHERE year=2017 AND number>1000;'
         self.parameterizedQuery = {
             'query': 'SELECT count(*) FROM `bigquery-public-data.usa_names.usa_1910_current` WHERE year=? AND number>?;',
@@ -24,21 +23,21 @@ class Test(unittest.TestCase):
         self.bc.location = 'US'
 
     def test_setClient(self):
-        self.bc.setClient(self.key)
+        self.bc.setClient()
         self.assertIsInstance(self.bc.client, bigquery.client.Client)
 
     @patch.object(bigquery.Client, 'from_service_account_json')
     def test_setClient_2(self, patched):
         # Should return a RuntimeError if the BigQuery client cannot be set correctly
         patched.return_value = None
-        self.assertRaises(RuntimeError, self.bc.setClient, self.key)
+        self.assertRaises(RuntimeError, self.bc.setClient)
 
     def test_getClient(self):
-        self.bc.setClient(self.key)
+        self.bc.setClient()
         self.assertIsInstance(self.bc.getClient(), bigquery.client.Client)
 
     def test_runQuery(self):
-        self.bc.setClient(self.key)
+        self.bc.setClient()
         self.assertIsNone(self.bc.runQuery(self.query))
 
         # Dump results
@@ -51,7 +50,7 @@ class Test(unittest.TestCase):
             parameters.append(self.bc.setParameter(type_, value))
 
         # Run parameterized query
-        self.bc.setClient(self.key)
+        self.bc.setClient()
         self.assertIsNone(self.bc.runQuery(
             self.parameterizedQuery['query'], parameters))
 
@@ -62,7 +61,7 @@ class Test(unittest.TestCase):
         self.assertRaises(RuntimeError, self.bc.runQuery, self.query)
 
     def test_readResult(self):
-        self.bc.setClient(self.key)
+        self.bc.setClient()
         self.bc.runQuery(self.query)
 
         for row in self.bc.readResult():

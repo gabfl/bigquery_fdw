@@ -17,6 +17,5 @@ CREATE FOREIGN TABLE usa_names (
 ) SERVER bigquery_srv
 OPTIONS (
     fdw_dataset 'bigquery-public-data.usa_names',
-    fdw_table 'usa_1910_current',
-    fdw_key '/opt/key/key.json'
+    fdw_table 'usa_1910_current'
 );

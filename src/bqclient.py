@@ -17,12 +17,12 @@ class BqClient:
     queryJob = None
     location = None  # Override dataset location
 
-    def setClient(self, jsonKeyPath):
+    def setClient(self):
         """
             Set BigQuery client with a Json key
         """
 
-        self.client = bigquery.Client.from_service_account_json(jsonKeyPath)
+        self.client = bigquery.Client()
 
         if not self.client:
             raise RuntimeError(

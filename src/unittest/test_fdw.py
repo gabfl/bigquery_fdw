@@ -15,7 +15,6 @@ class Test(unittest.TestCase):
     def setUp(self):
         # Set options
         self.options = {
-            'fdw_key': '/opt/key/key.json',
             'fdw_dataset': 'bigquery-public-data.usa_names',
             'fdw_table': 'usa_1910_current',
             'fdw_verbose': 'true',

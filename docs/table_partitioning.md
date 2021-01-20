@@ -12,8 +12,7 @@ CREATE FOREIGN TABLE my_bigquery_table (
 ) SERVER bigquery_srv
 OPTIONS (
     fdw_dataset  'my_dataset',
-    fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/key.json'
+    fdw_table 'my_table'
 );
 ```
 
