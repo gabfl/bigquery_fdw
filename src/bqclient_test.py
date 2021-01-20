@@ -5,7 +5,7 @@ import argparse
 from .bqclient import BqClient
 
 
-def run_test(query, key):
+def run_test(query):
     """
         BigQuery client test
     """
@@ -14,7 +14,7 @@ def run_test(query, key):
     bq = set_bq_instance()
 
     # Authentication
-    set_client(bq, key)
+    set_client(bq)
     print(" * BigQuery client instance:")
     print(get_client(bq))
 
@@ -39,12 +39,12 @@ def set_bq_instance():
     return BqClient()
 
 
-def set_client(bq, key):
+def set_client(bq):
     """
         Set BigQuery client
     """
 
-    return bq.setClient(key)
+    return bq.setClient()
 
 
 def get_client(bq):
@@ -85,14 +85,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--auth_type", type=str, help="Authentication type",
                         choices=['service_account'], default='service_account')
-    parser.add_argument("-k", "--key", type=str,
-                        help="Json private key path", required=True)
     parser.add_argument("-q", "--query", type=str,
                         help="Query to run", required=True)
     args = parser.parse_args()
 
-    run_test(query=args.query,
-             key=args.key)
+    run_test(query=args.query)
 
 
 if __name__ == '__main__':
