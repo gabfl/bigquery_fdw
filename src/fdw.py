@@ -10,8 +10,7 @@ from .bqclient import BqClient
 class ConstantForeignDataWrapper(ForeignDataWrapper):
 
     # Default vars
-    clients = {}  # Dictionnary of clients
-    bq = None  # BqClient instance
+    client = None  # BqClient instance
     partitionPseudoColumn = 'partition_date'  # Name of the partition pseudo column
     # Pseudo column to fetch `count(*)` when using the remote counting and grouping feature
     countPseudoColumn = '_fdw_count'
@@ -220,16 +219,16 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         #     log_to_postgres(columns, INFO)
 
         # Returns instance of BqClient
-        self.bq = self.getClient()
+        client = self.getClient()
 
         # Prepare query
         query, parameters = self.buildQuery(quals, columns)
 
         # Run query
-        self.bq.runQuery(query, parameters, self.dialect)
+        client.runQuery(query, parameters, self.dialect)
 
         # Return query output
-        for row in self.bq.readResult():
+        for row in client.readResult():
             # Create an ordered dict with the column name and value
             # Example: `OrderedDict([('column1', 'value1'), ('column2', value2)])`
             line = OrderedDict()
@@ -458,6 +457,6 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Verbose log
         if self.verbose:
             log_to_postgres(
-                "Add query parameter `" + self.bq.varToString(value) + "` for column `" + column + "` with the type `" + type_ + "`", INFO)
+                "Add query parameter `" + self.client.varToString(value) + "` for column `" + column + "` with the type `" + type_ + "`", INFO)
 
-        return self.bq.setParameter(type_, value)
+        return self.client.setParameter(type_, value)
