@@ -27,7 +27,7 @@ class BqClient:
             self.client = bigquery.Client()
         except auth.exceptions.DefaultCredentialsError as e:
             raise RuntimeError(
-                'BigQuery client is not instantiated properly:' + str(e))
+                'BigQuery client is not instantiated properly: ' + str(e))
 
     def getClient(self):
         """

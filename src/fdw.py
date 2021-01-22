@@ -1,5 +1,4 @@
-from collections import OrderedDict
-from collections import namedtuple
+from collections import OrderedDict, namedtuple
 
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres, ERROR, WARNING, INFO, DEBUG

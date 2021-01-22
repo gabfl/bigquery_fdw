@@ -3,7 +3,7 @@
 ## Pre-requisite
 
 You will need:
- - To clone bigquery_fdw on your compoter
+ - To clone bigquery_fdw on your computer
  - To [create a "Service account"](service_account.md) with the [correct permissions](service_account_permissions.md)
 
 ## Get started
