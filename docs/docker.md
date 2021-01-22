@@ -22,7 +22,7 @@ docker run \
 ### Install bigquery_fdw
 
 ```bash
-python3 setup.py install
+pip3 install .
 su postgres -c 'psql -f sample_sql/setup.sql -d fdw'
 su postgres -c 'psql -f sample_sql/query.sql -d fdw'
 ```
