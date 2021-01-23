@@ -29,8 +29,7 @@ test=# CREATE FOREIGN TABLE tmp (
 ) SERVER bigquery_srv
 OPTIONS (
     fdw_dataset  'my_dataset',
-    fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/key.json'
+    fdw_table 'my_table'
 );
 
 test=# SELECT uuid, timestamp FROM tmp LIMIT 10;
@@ -61,7 +60,6 @@ test=# CREATE FOREIGN TABLE tmp (
 OPTIONS (
     fdw_dataset  'my_dataset',
     fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/key.json',
     fdw_convert_tz 'US/Eastern' -- <-- Time zone will be converted to US/Eastern
 );
 

@@ -8,6 +8,7 @@
 import datetime
 
 from google.cloud import bigquery
+from google import auth
 
 
 class BqClient:
@@ -17,16 +18,16 @@ class BqClient:
     queryJob = None
     location = None  # Override dataset location
 
-    def setClient(self, jsonKeyPath):
+    def setClient(self):
         """
             Set BigQuery client with a Json key
         """
 
-        self.client = bigquery.Client.from_service_account_json(jsonKeyPath)
-
-        if not self.client:
+        try:
+            self.client = bigquery.Client()
+        except auth.exceptions.DefaultCredentialsError as e:
             raise RuntimeError(
-                'BigQuery client is not instantiated properly (from `setClient`).')
+                'BigQuery client is not instantiated properly: ' + str(e))
 
     def getClient(self):
         """

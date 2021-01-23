@@ -3,7 +3,7 @@
 ## Pre-requisite
 
 You will need:
- - To clone bigquery_fdw on your compoter
+ - To clone bigquery_fdw on your computer
  - To [create a "Service account"](service_account.md) with the [correct permissions](service_account_permissions.md)
 
 ## Get started
@@ -22,7 +22,7 @@ docker run \
 ### Install bigquery_fdw
 
 ```bash
-python3 setup.py install
+pip3 install .
 su postgres -c 'psql -f sample_sql/setup.sql -d fdw'
 su postgres -c 'psql -f sample_sql/query.sql -d fdw'
 ```
@@ -51,7 +51,7 @@ Time: 3.992s (3 seconds)
 ## What is in the image?
 
 The docker images comes with:
- - PostgreSQL 10 installed
- - Multicorn installed and compiled
+ - PostgreSQL 12 installed
+ - [Multicorn](https://github.com/gabfl/Multicorn) installed and compiled
  - All the packages required by bigquery_fdw
  - The setup.sql file comes pre-loaded with the foreign table `bigquery-public-data.usa_names.usa_1910_current` to test queries.

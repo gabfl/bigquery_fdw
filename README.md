@@ -21,7 +21,11 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 ## Requirements
 
  - PostgreSQL >= 9.5
- - Python 3
+ - Python >= 3.4
+
+## ⚠️ Migrating to version 1.8 from versions 1.7 and below
+
+Starting with version 1.8, the `fdw_key` option is deprecated and replaced with a default environment variable. See [Authentication](#Authentication).
 
 ## Get started
 
@@ -38,17 +42,20 @@ You need to install the following dependencies:
 ```bash
 # Install required packages
 apt-get update
-apt-get install --yes postgresql-server-dev-13 python3-setuptools python3-dev make gcc git
+apt-get install --yes postgresql-server-dev-12 python3-setuptools python3-dev make gcc git
 ```
 
-For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-13`.
+For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-12`.
+
+All PostgreSQL versions from 9.2 to 12 should be supported. Building Multicorn against PostgreSQL 13 is currently not working properly (as of 1/21/2013).
 
 #### Installation
 
 ```bash
 # Install Multicorn
-git clone git://github.com/Segfault-Inc/Multicorn.git && cd Multicorn
-export PYTHON_OVERRIDE=python3
+# gabfl/Multicorn is a fork of Segfault-Inc/Multicorn that adds better support for Python3.
+# You may chose to build against the original project instead.
+git clone git://github.com/gabfl/Multicorn.git && cd Multicorn
 make && make install
 
 # Install bigquery_fdw
@@ -59,6 +66,17 @@ Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
  - [Multicorn](https://github.com/Segfault-Inc/Multicorn)
+
+## Authentication
+
+bigquery_fdw relies on [Google Cloud API's default authentication](https://cloud.google.com/docs/authentication/getting-started#linux-or-macos). 
+
+Your need to have an environment variable `GOOGLE_APPLICATION_CREDENTIALS` that has to be accessible by bigquery_fdw. Setting environment variables varies depending on OS but for Ubuntu or Debian, the preferred way is to edit `/etc/postgresql/[version]/main/environment` and add:
+```
+GOOGLE_APPLICATION_CREDENTIALS = '/path/to/key.json'
+```
+
+Restarting PostgreSQL is required for the environment variable to be loaded.
 
 ## Usage
 
@@ -80,8 +98,7 @@ CREATE FOREIGN TABLE my_bigquery_table (
 ) SERVER bigquery_srv
 OPTIONS (
     fdw_dataset  'my_dataset',
-    fdw_table 'my_table',
-    fdw_key '/opt/bigquery_fdw/key.json'
+    fdw_table 'my_table'
 );
 ```
 
@@ -93,7 +110,6 @@ List of options implemented in `CREATE FOREIGN TABLE` syntax:
 |-----|----|----|
 | `fdw_dataset` | - | BigQuery dataset name |
 | `fdw_table` | - | BigQuery table name |
-| `fdw_key` | - | Path to private Json key (See [Key storage recommendations](docs/key_storage.md)) |
 | `fdw_convert_tz` | - | Convert BigQuery time zone for dates and timestamps to selected time zone. Example: `'US/Eastern'`. |
 | `fdw_group` |  `'false'` | See [Remote grouping and counting](docs/remote_grouping.md). |
 | `fdw_casting` |  - | See [Casting](docs/casting.md). |

@@ -5,15 +5,18 @@ bigquery_fdw contains the utility `bq_client_test` to test a query against the B
 ## Usage
 
 ```bash
-bq_client_test --key /path/to/key.json \
-               --query "SELECT count(*) FROM my_dataset.my_table"
+# Provide authentication credentials to BigQuery by setting the environment variable GOOGLE_APPLICATION_CREDENTIALS
+# See https://cloud.google.com/docs/authentication/getting-started
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
+
+bq_client_test --query "SELECT count(*) FROM my_dataset.my_table"
 ```
 
 ## Example
 
 ```
-$ bq_client_test --key /path/to/key.json \
->                --query "SELECT count(*) FROM my_dataset.my_table"
+$ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
+$ bq_client_test --query "SELECT count(*) FROM my_dataset.my_table"
 
  * BigQuery client instance:
 <google.cloud.bigquery.client.Client object at 0x10c863e48>
