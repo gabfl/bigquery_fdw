@@ -1,9 +1,18 @@
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict, namedtuple, defaultdict
 
-from multicorn import ForeignDataWrapper
+from multicorn import ColumnDefinition, ForeignDataWrapper, TableDefinition
 from multicorn.utils import log_to_postgres, ERROR, WARNING, INFO, DEBUG
 
 from .bqclient import BqClient
+
+DEFAULT_MAPPINGS = {
+    'STRING': "TEXT",
+    'INT64': "BIGINT",
+    'DATE': "DATE",
+    "FLOAT64": "DOUBLE PRECISION",
+    "BOOL": "BOOLEAN",
+    'TIMESTAMP': "TIMESTAMP WITHOUT TIME ZONE",
+}
 
 
 class ConstantForeignDataWrapper(ForeignDataWrapper):
@@ -39,8 +48,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
 
         # Set options at class scope
         try:
-            self.dataset = options['fdw_dataset']
-            self.table = options['fdw_table']
+            self.dataset = options.get('fdw_dataset') or options.get('schema')
+            self.table = options.get('fdw_table') or options.get('tablename')
             self.convertToTz = options.get('fdw_convert_tz')
 
             # Set verbose option
@@ -94,8 +103,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             conversionRule('STRING', ['BOOL', 'BYTES', 'DATE', 'DATETIME',
                                       'FLOAT64', 'INT64', 'STRING', 'TIME', 'TIMESTAMP']),
             conversionRule('BYTES', ['BYTES', 'STRING']),
-            conversionRule(
-                'DATE', ['DATE', 'DATETIME', 'STRING', 'TIMESTAMP']),
+            conversionRule('DATE', ['DATE', 'DATETIME', 'STRING', 'TIMESTAMP']),
             conversionRule(
                 'DATETIME', ['DATE', 'DATETIME', 'STRING', 'TIME', 'TIMESTAMP']),
             conversionRule('TIME', ['STRING', 'TIME']),
@@ -197,8 +205,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                 log_to_postgres(
                     "Connection to BigQuery client with BqClient instance ID " + str(id(bq)), INFO)
 
-            # Add to pool
-            self.client = bq
+            # Add to pool, set to the class-level
+            type(self).client = bq
 
             return bq
         except RuntimeError:
@@ -459,3 +467,62 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                 "Add query parameter `" + self.client.varToString(value) + "` for column `" + column + "` with the type `" + type_ + "`", INFO)
 
         return self.client.setParameter(type_, value)
+
+    @classmethod
+    def import_schema(
+        cls, schema, srv_options, options, restriction_type, restricts=None
+    ):
+
+        return cls(srv_options, [])._import_schema(
+            schema, srv_options, options, restriction_type, restricts
+        )
+
+    def _import_schema(
+        self, schema, srv_options, options, restriction_type, restricts=None
+    ):
+        """
+        Pulls in the remote schema.
+        """
+        if restriction_type == 'limit':
+            only = restricts
+        elif restriction_type == 'except':
+            only = lambda t, _: t not in restricts
+        else:
+            only = None
+        to_import = []
+
+        client = self.getClient()
+        query = f'''
+            SELECT table_schema, table_name, column_name, data_type
+            FROM `{schema}.INFORMATION_SCHEMA.COLUMNS`
+            ORDER BY ordinal_position;
+        '''
+
+        schemas = set()
+
+        client.runQuery(query, (), self.dialect)
+
+        tables = defaultdict(list)
+        for row in client.readResult():
+            if only and not only(row.table_name):
+                # doesn't match required stuff
+                continue
+            schemas.add(row.table_schema)
+            tables[row.table_schema, row.table_name].append(
+                (row.column_name, row.data_type)
+            )
+
+        to_insert = []
+        for (schema, table), columns in tables.items():
+            ftable = TableDefinition(table)
+            ftable.options['schema'] = schema
+            ftable.options['tablename'] = table
+
+            for col, typ in columns:
+                typ = DEFAULT_MAPPINGS.get(typ, "TEXT")
+                ftable.columns.append(ColumnDefinition(col, type_name=typ))
+            to_insert.append(ftable)
+            if self.verbose:
+                log_to_postgres("fdw importing table `" + schema + "." + table + "`")
+
+        return to_insert
