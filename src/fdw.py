@@ -6,13 +6,21 @@ from multicorn.utils import log_to_postgres, ERROR, WARNING, INFO, DEBUG
 from .bqclient import BqClient
 
 DEFAULT_MAPPINGS = {
-    'STRING': "TEXT",
-    'INT64': "BIGINT",
-    'DATE': "DATE",
+    "STRING": "TEXT",
+    "INT64": "BIGINT",
+    "INTEGER": "BIGINT",
+    "DATE": "DATE",
     "FLOAT64": "DOUBLE PRECISION",
     "BOOL": "BOOLEAN",
-    'TIMESTAMP': "TIMESTAMP WITHOUT TIME ZONE",
+    "TIMESTAMP": "TIMESTAMP WITHOUT TIME ZONE",
+    # note: untested, so commented out
+    # "BYTES": "BYTES",
+    # "STRUCT": "STRING",
 }
+
+
+class FDWImportError(Exception):
+    "raised if 'import foreign schema' ran into an error condition"
 
 
 class ConstantForeignDataWrapper(ForeignDataWrapper):
@@ -41,31 +49,41 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         self.setDatatypes()
         self.setConversionRules()
 
+
     def setOptions(self, options):
         """
             Set table options at class level
         """
 
         # Set options at class scope
-        try:
-            self.dataset = options.get('fdw_dataset') or options.get('schema')
-            self.table = options.get('fdw_table') or options.get('tablename')
-            self.convertToTz = options.get('fdw_convert_tz')
+        self.dataset = options.get('fdw_dataset') or options.get('schema')
+        self.table = options.get('fdw_table') or options.get('tablename')
+        self.convertToTz = options.get('fdw_convert_tz')
 
-            # Set verbose option
-            self.setOptionVerbose(options.get('fdw_verbose'))
+        # Set verbose option
+        self.setOptionVerbose(options.get('fdw_verbose'))
 
-            # Set SQL dialect
-            self.setOptionSqlDialect(options.get('fdw_sql_dialect'))
+        # Set SQL dialect
+        self.setOptionSqlDialect(options.get('fdw_sql_dialect'))
 
-            # Set grouping option
-            self.setOptionGroupBy(options.get('fdw_group'))
+        # Set grouping option
+        self.setOptionGroupBy(options.get('fdw_group'))
 
-            # Set casting rules
-            self.setOptionCasting(options.get('fdw_casting'))
-        except KeyError:
-            log_to_postgres(
-                "You must specify these options when creating the FDW: fdw_dataset, fdw_table", ERROR)
+        # Set casting rules
+        self.setOptionCasting(options.get('fdw_casting'))
+
+        # Set what to do if imported table has too many columns
+        self.tooManyColumns = options.get("fdw_colcount") or "error"
+        if self.tooManyColumns not in ("error", "trim", "skip"):
+            log_to_postgres("fdw_colcount must be one of 'error', 'trim', 'skip', if provided", ERROR)
+            self.tooManyColumns = "error"
+
+        # Set what to do if imported table columns share a 63
+        # character prefix
+        self.sharedPrefix = options.get("fdw_colnames") or "error"
+        if self.sharedPrefix not in ("error", "skip", "trim"):
+            log_to_postgres("fdw_colnames must be one of 'error', 'trim', 'skip', if provided", ERROR)
+            self.sharedPrefix = "error"
 
     def setDatatypes(self):
         """
@@ -75,7 +93,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Create a named tuple
         datatype = namedtuple('datatype', 'postgres bq_standard bq_legacy')
 
-        self.datatypes = [
+        datatypes = [
             datatype('text', 'STRING', 'STRING'),
             # datatype('bytea', 'BYTES', 'BYTES'), # Not supported, need testing for support
             datatype('bigint', 'INT64', 'INTEGER'),
@@ -86,6 +104,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             datatype('time without time zone', 'TIME', 'TIME'),
             datatype('timestamp without time zone', 'DATETIME', 'DATETIME'),
         ]
+        self.datatypes = {dtype.postgres: dtype for dtype in datatypes}
 
     def setConversionRules(self):
         """
@@ -96,7 +115,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         conversionRule = namedtuple(
             'conversionRule', 'bq_standard_from bq_standard_to')
 
-        self.conversionRules = [
+        conversionRules = [
             conversionRule('INT64', ['BOOL', 'FLOAT64', 'INT64', 'STRING']),
             conversionRule('FLOAT64', ['FLOAT64', 'INT64', 'STRING']),
             conversionRule('BOOL', ['BOOL', 'INT64', 'STRING']),
@@ -112,6 +131,9 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             conversionRule('ARRAY', ['ARRAY']),
             conversionRule('STRUCT', ['STRUCT']),
         ]
+        self.conversionRules = {
+            rule.bq_standard_from: rule for rule in conversionRules
+        }
 
     def setOptionSqlDialect(self, standard_sql=None):
         """
@@ -205,8 +227,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
                 log_to_postgres(
                     "Connection to BigQuery client with BqClient instance ID " + str(id(bq)), INFO)
 
-            # Add to pool, set to the class-level
-            type(self).client = bq
+            # Add to pool
+            self.client = bq
 
             return bq
         except RuntimeError:
@@ -347,12 +369,12 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             castTo = self.castingRules[columnOriginalName]
 
             # Find if we have a matching rule
-            rule = [
-                conversionRule for conversionRule in self.conversionRules if conversionRule.bq_standard_from == dataType.upper()]
+
+            rule = self.conversionRules.get(dataType.upper())
 
             if rule:
                 # Check if casting from the original data type to the new one is supported
-                if castTo.upper() in rule[0].bq_standard_to:
+                if castTo.upper() in rule.bq_standard_to:
                     return 'CAST(' + column + ' as ' + castTo.upper() + ')'
                 else:
                     log_to_postgres("Casting from the data type `" + dataType.upper(
@@ -445,13 +467,12 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Example: `timestamp without time zone`
         pgDatatype = self.columns[column].base_type_name
 
-        for datatype in self.datatypes:  # For each known data types
-            if datatype.postgres == pgDatatype:  # If the PostgreSQL data type matches the known data type
-                # Returns equivalent BigQuery data type
-                if dialect == 'legacy':
-                    return datatype.bq_legacy
-                else:
-                    return datatype.bq_standard
+        datatype = self.datatypes.get(pgDatatype)
+        if datatype:
+            if dialect == 'legacy':
+                return datatype.bq_legacy
+            else:
+                return datatype.bq_standard
 
         # Return a default data type in an attempt to save the day
         return 'STRING'
@@ -473,23 +494,22 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         cls, schema, srv_options, options, restriction_type, restricts=None
     ):
 
-        return cls(srv_options, [])._import_schema(
+        return cls(srv_options, []).import_schema_bigquery_fdw(
             schema, srv_options, options, restriction_type, restricts
         )
 
-    def _import_schema(
+    def import_schema_bigquery_fdw(
         self, schema, srv_options, options, restriction_type, restricts=None
     ):
         """
         Pulls in the remote schema.
         """
         if restriction_type == 'limit':
-            only = restricts
+            only = lambda t: t in restricts
         elif restriction_type == 'except':
-            only = lambda t, _: t not in restricts
+            only = lambda t: t not in restricts
         else:
             only = None
-        to_import = []
 
         client = self.getClient()
         query = f'''
@@ -505,7 +525,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         tables = defaultdict(list)
         for row in client.readResult():
             if only and not only(row.table_name):
-                # doesn't match required stuff
+                # doesn't match required fields
                 continue
             schemas.add(row.table_schema)
             tables[row.table_schema, row.table_name].append(
@@ -513,7 +533,23 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             )
 
         to_insert = []
-        for (schema, table), columns in tables.items():
+        for (_schema, table), columns in tables.items():
+            if _schema.lower() != schema.lower():
+                # wrong schema, we'll skip
+                continue
+
+            # Let's make sure the table is sane-ish with respect to
+            # column names and counts.
+            try:
+                if not self._check_table(table, columns):
+                    # for "skip" in fdw_colcount and "skip_table" in fdw_colnames
+                    continue
+            except FDWImportError:
+                # for "error" cases in fdw_colnames and fdw_colcount
+                return []
+
+            # for non-error, trim, and trim_columns
+
             ftable = TableDefinition(table)
             ftable.options['schema'] = schema
             ftable.options['tablename'] = table
@@ -521,8 +557,84 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             for col, typ in columns:
                 typ = DEFAULT_MAPPINGS.get(typ, "TEXT")
                 ftable.columns.append(ColumnDefinition(col, type_name=typ))
+
             to_insert.append(ftable)
             if self.verbose:
-                log_to_postgres("fdw importing table `" + schema + "." + table + "`")
+                log_to_postgres("fdw importing table `" + schema + "." + table + "`", WARNING)
 
         return to_insert
+
+    def _check_table(self, table, columns):
+        # column names are going to be truncated, let's make sure that we
+        # don't have any shared prefixes
+        shortened = defaultdict(set)
+        for i, (name, typ) in enumerate(columns):
+            shortened[name[:63]].add(name)
+
+        if len(shortened) != len(columns):
+            bad_cols = set()
+
+            for prefix, dupes in shortened.items():
+                if len(dupes) > 1:
+                    if self.sharedPrefix == "error":
+                        log_to_postgres(
+                            "fdw not importing table `" + table \
+                            + "` with identical 63-character prefix `" + prefix \
+                            + "` columns: " + str(list(dupes)), ERROR)
+                        raise FDWImportError("matching column prefix: " + prefix)
+
+                    elif self.sharedPrefix == "skip":
+                        if self.verbose:
+                            log_to_postgres(
+                                "fdw not importing table `" + table \
+                                + "` with identical 63-character prefix `" + prefix \
+                                + "` columns: " + str(list(dupes)), WARNING)
+                        return False
+
+                    else: #if self.sharedPrefix == "trim"
+                        if self.verbose:
+                            log_to_postgres(
+                                "fdw not importing columns in table `" + table \
+                                + "` with identical 63-character prefix `" + prefix \
+                                + "` columns: " + str(list(dupes)), WARNING)
+
+                        # make note of our bad columns
+                        bad_cols.update(dupes)
+
+            # remove bad columns from our list
+            columns[:] = [col for col in columns if col[0] not in bad_cols]
+
+            if not columns:
+                # trimmed to 0 due to duplicate column prefixes, that is amazing
+                if self.verbose:
+                    log_to_postgres(
+                        "fdw not importing table `" + table \
+                        + "` because all columns share some 63 character prefix with another" \
+                        + str(list(dupes)), WARNING)
+                return False
+
+        # bigquery can have many columns, let's make sure we're not trying
+        # to load a table with too many columns.
+        if len(columns) > 1600:
+            if self.tooManyColumns == "error":
+                log_to_postgres(
+                    "fdw not importing table `" + table + "` with " \
+                    + str(len(columns)) + " columns", ERROR)
+                raise FDWImportError("too many columns: " + str(len(columns)))
+
+            elif self.tooManyColumns == "trim":
+                if self.verbose:
+                    log_to_postgres(
+                        "fdw trimming " + str(len(columns) - 1600) \
+                        + " columns from table `" + table + "` on import", WARNING)
+                del columns[1600:]
+
+            else: # skip
+                if self.verbose:
+                    log_to_postgres(
+                        "fdw skipping table `" + table + "` with " \
+                        + str(len(columns)) + " columns", WARNING)
+
+                return False
+
+        return True

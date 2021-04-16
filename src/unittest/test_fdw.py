@@ -1,14 +1,17 @@
 import unittest
-from unittest.mock import patch
-from collections import OrderedDict
+from unittest.mock import patch, MagicMock
+from collections import OrderedDict, namedtuple
 import datetime
 import os
 
 import multicorn
 from google.cloud import bigquery
 
-from ..bqclient import BqClient
-from ..fdw import ConstantForeignDataWrapper
+from bigquery_fdw.bqclient import BqClient
+from bigquery_fdw.fdw import ConstantForeignDataWrapper, DEFAULT_MAPPINGS
+
+
+test_row = namedtuple("test_row", "table_schema, table_name, column_name, data_type")
 
 
 class Test(unittest.TestCase):
@@ -58,8 +61,8 @@ class Test(unittest.TestCase):
 
     def test_setDatatypes(self):
         self.fdw.setDatatypes()
-        self.assertIsInstance(self.fdw.datatypes, list)
-        for datatype in self.fdw.datatypes:
+        self.assertIsInstance(self.fdw.datatypes, dict)
+        for datatype in self.fdw.datatypes.values():
             self.assertIsInstance(datatype, tuple)
             self.assertIsInstance(datatype.postgres, str)
             self.assertIsInstance(datatype.bq_standard, str)
@@ -67,8 +70,8 @@ class Test(unittest.TestCase):
 
     def test_setConversionRules(self):
         self.fdw.setConversionRules()
-        self.assertIsInstance(self.fdw.conversionRules, list)
-        for conversionRule in self.fdw.conversionRules:
+        self.assertIsInstance(self.fdw.conversionRules, dict)
+        for conversionRule in self.fdw.conversionRules.values():
             self.assertIsInstance(conversionRule, tuple)
             self.assertIsInstance(conversionRule.bq_standard_from, str)
             self.assertIsInstance(conversionRule.bq_standard_to, list)
@@ -394,3 +397,60 @@ class Test(unittest.TestCase):
         self.fdw.bq = self.fdw.getClient()
         self.assertIsInstance(self.fdw.setParameter(
             'column', 'STRING', 'some string'), bigquery.query.ScalarQueryParameter)
+
+    def test_foreignSchema(self, example_columns=None, options=None, trimmed=1, to_add=1):
+        self.options.pop("fdw_table", None)
+        self.options.pop("fdw_dataset", None)
+        self.options.update(options or {})
+
+        example_columns = example_columns or [test_row("public", "bq_table", "id", "INT64"),
+            test_row("public", "bq_table", "created_at", "TIMESTAMP"),
+            test_row("public", "bq_table", "updated_at", "TIMESTAMP"),
+            test_row("public", "bq_table", "visited_at", "DATE"),
+            test_row("public", "bq_table", "username", "STRING"),
+            test_row("public", "bq_table", "name", "TEXT"),
+            test_row("public", "bq_table", "roles", "ARRAY<STRING>"),
+            test_row("public", "bq_table", "recent_actions", "ARRAY<STRING>"),
+            test_row("public", "bq_table", "blocked", "BOOL"),
+            test_row("public", "bq_table", "blocked_admin", "BOOL"),
+            test_row("public", "bq_table", "some_float_col", "FLOAT64"),
+            test_row("omit_me", "bq_table", "some_omitted_col", "STRING"),
+        ]
+
+        self.fdw = ConstantForeignDataWrapper(self.options, [])
+        self.fdw.client = MagicMock()
+        self.fdw.client.__bool__.return_value = True
+        self.fdw.client.runQuery.return_value = None
+        self.fdw.client.readResult.return_value = example_columns
+
+        # include everything except nothing. Test at least one side of the filter
+        tables_to_add = self.fdw.import_schema_bigquery_fdw("public", {}, {}, "except", {})
+        self.assertEquals(len(tables_to_add), to_add)
+
+        if to_add:
+            tables_to_add.sort(key=lambda x: x.options["tablename"])
+            self.assertEquals(tables_to_add[0].options["schema"], "public")
+            self.assertEquals(tables_to_add[0].options["tablename"], "bq_table")
+            self.assertEquals(sum(len(t.columns) for t in tables_to_add), len(example_columns) - trimmed)
+            for column, expected in zip(tables_to_add[0].columns, example_columns):
+                self.assertEquals(column.column_name, expected.column_name)
+                self.assertEquals(
+                    column.type_name, DEFAULT_MAPPINGS.get(expected.data_type, "TEXT"))
+
+    def test_many_columns(self):
+        example_columns = [test_row("public", "bq_table2", "id_c_"+ str(i), "INT64") for i in range(1601)]
+        example_columns.extend([test_row("public", "bq_table", "id_c_"+ str(i), "INT64") for i in range(10)])
+        self.test_foreignSchema(example_columns, {'fdw_colcount': 'skip'}, 1601)
+        self.test_foreignSchema(example_columns, {'fdw_colcount': 'trim'}, 1, 2)
+        self.test_foreignSchema(example_columns, {'fdw_colcount': 'error'}, 2, 0)
+
+    def test_shared_prefix(self):
+        example_columns = [test_row("public", "bq_table", "id_c_"+ str(i), "INT64") for i in range(10)]
+        example_columns.extend([
+            test_row("public", "bq_table2", "long_column_name___2_________3_________4_________5_________6__3_1", "TEXT"),
+            test_row("public", "bq_table2", "long_column_name___2_________3_________4_________5_________6__3_2", "TEXT")
+        ])
+        self.test_foreignSchema(example_columns, {'fdw_colnames': 'skip'}, 2)
+        # a whole table was trimmed to 0 columns due to dupes!
+        self.test_foreignSchema(example_columns, {'fdw_colnames': 'trim'}, 2)
+        self.test_foreignSchema(example_columns, {'fdw_colnames': 'error'}, 2, 0)

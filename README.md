@@ -102,6 +102,21 @@ OPTIONS (
 );
 ```
 
+Or with the new `IMPORT FOREIGN SCHEMA` support
+
+```sql
+CREATE EXTENSION multicorn;
+
+CREATE SERVER bigquery_srv FOREIGN DATA WRAPPER multicorn
+OPTIONS (
+    wrapper 'bigquery_fdw.fdw.ConstantForeignDataWrapper',
+    fdw_colcount 'skip'
+);
+
+IMPORT FOREIGN SCHEMA public FROM SERVER bigquery_srv INTO public;
+```
+
+
 ## Options
 
 List of options implemented in `CREATE FOREIGN TABLE` syntax:
@@ -115,6 +130,10 @@ List of options implemented in `CREATE FOREIGN TABLE` syntax:
 | `fdw_casting` |  - | See [Casting](docs/casting.md). |
 | `fdw_verbose` | `'false'` | Set to `'true'` to output debug information in PostrgeSQL's logs |
 | `fdw_sql_dialect` | `'standard'` | BigQuery SQL dialect. Currently only `standard` is supported. |
+| `fdw_colnames` | `'error'` | What to do if more than one column in the same table has the same 63 character prefix; `error`, `trim`, and `skip` are supported. |
+| `fdw_colcount` | `'error'` | What to do if your BigQuery table has >1600 columns; `error`, `trim`, and `skip` are supported. |
+
+[Read more](docs/README.md) about `fdw_colnames` and `fdw_colcount` ordering.
 
 ## More documentation
 

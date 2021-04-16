@@ -6,6 +6,7 @@
  - [Convert BigQuery data types to PostgreSQL data types](data_types.md)
  - [Supported operators](operators.md)
  - [Performance and understanding the FDW mechanism](performance_and_mechanism.md)
+ - [Too many columns or column name prefixes shared](import_foreign_schema.md)
 
 ## Advanced usage
 
