@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.8', '3.9']
 
     steps:
       - uses: actions/checkout@v2
@@ -24,7 +24,7 @@ jobs:
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
           sudo apt-key add -
           sudo apt-get update
-          sudo apt-get -y install postgresql-14 postgresql-server-dev-14
+          sudo apt-get -y install postgresql-11 postgresql-server-dev-11
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
@@ -33,8 +33,8 @@ jobs:
         run: |
           git clone git://github.com/gabfl/Multicorn.git /opt/Multicorn
           cd /opt/Multicorn
-          sudo mkdir -p /usr/share/doc/postgresql-doc-14 /usr/lib/postgresql/14/lib/bitcode/
-          sudo chmod 777 /usr/share/doc/postgresql-doc-14 /usr/lib/postgresql/14/lib/ /usr/share/postgresql/14/extension/ /usr/lib/postgresql/14/lib/bitcode/
+          sudo mkdir -p /usr/share/doc/postgresql-doc-11 /usr/lib/postgresql/11/lib/bitcode/
+          sudo chmod 777 /usr/share/doc/postgresql-doc-11 /usr/lib/postgresql/11/lib/ /usr/share/postgresql/11/extension/ /usr/lib/postgresql/11/lib/bitcode/
           make && make install
       - name: Start PostgreSQL
         run: |
