@@ -37,7 +37,8 @@ jobs:
           cd /opt/Multicorn
           sudo mkdir -p /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
-          make && sudo make install
+          sudo chmod 777 /usr/local/lib/python${{ matrix.python-version }}/dist-packages/
+          make && make install
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
@@ -52,7 +53,7 @@ jobs:
         run: |
           pip install -U pip
           pip install pycodestyle codecov pytest
-          sudo python setup.py install
+          python setup.py install
       - name: Run pycodestyle
         run: |
           pycodestyle --exclude=venv --ignore=E501 .
