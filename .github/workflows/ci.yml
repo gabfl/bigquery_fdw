@@ -18,11 +18,13 @@ jobs:
           architecture: x64
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
-      - name: Install PostgreSQL dev
+      - name: Install PostgreSQL manually
         run: |
-          sudo apt update
-          sudo apt search postgresql-server
-          sudo apt install postgresql-server-dev-all
+          echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+          apt-key add -
+          apt-get update
+          apt-get -y install postgresql-14  postgresql-server-dev-14
       - name: Clone and compile Multicorn
         run: |
           git clone git://github.com/gabfl/Multicorn.git /opt/Multicorn
