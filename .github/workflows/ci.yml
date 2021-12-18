@@ -21,6 +21,7 @@ jobs:
       - name: Install PostgreSQL dev
         run: |
           sudo apt update
+          sudo apt search postgresql-server
           sudo apt install postgresql-server-dev-14
       - name: Start PostgreSQL
         run: |
