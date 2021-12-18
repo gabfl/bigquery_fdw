@@ -20,6 +20,7 @@ jobs:
         run: python -c "import sys; print(sys.version)"
       - name: Install PostgreSQL dev
         run: |
+          sudo apt update
           sudo apt install postgresql-server-dev-14
       - name: Start PostgreSQL
         run: |
