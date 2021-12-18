@@ -39,6 +39,8 @@ jobs:
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/local/lib/python${{ matrix.python-version }}/dist-packages/
           make && make install
+        env:
+          PYTHON_OVERRIDE: python${{ matrix.python-version }}
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
@@ -60,8 +62,8 @@ jobs:
       - name: Run pytest
         run: |
           coverage run --source=. -m pytest
-          env:
-            GOOGLE_APPLICATION_CREDENTIALS: "/opt/key/key.json"
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: "/opt/key/key.json"
       - name: Generate coverage report
         run: |
           coverage report -m
