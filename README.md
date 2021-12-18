@@ -20,8 +20,10 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ## Requirements
 
- - PostgreSQL >= 9.5
+ - PostgreSQL >= 9.5 up to 12
  - Python >= 3.4
+
+Currently, PostgreSQL 13 and 14 are unsupported by the dependency Multicorn (see [here](https://github.com/Segfault-Inc/Multicorn/issues/269) and [here](https://github.com/Segfault-Inc/Multicorn/issues/261)). Some forks of Multicorn seem to add support for these versions and are referenced in the GitHub issues linked.
 
 ## ⚠️ Migrating to version 1.8 from versions 1.7 and below
 
