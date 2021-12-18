@@ -22,7 +22,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt search postgresql-server
-          sudo apt install postgresql-server-dev-14
+          sudo apt install postgresql-server-dev-all
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
