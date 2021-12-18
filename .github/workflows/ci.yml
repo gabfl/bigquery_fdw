@@ -23,6 +23,13 @@ jobs:
           sudo apt update
           sudo apt search postgresql-server
           sudo apt install postgresql-server-dev-all
+      - name: Clone and compile Multicorn
+        run: |
+          git clone git://github.com/gabfl/Multicorn.git /opt/Multicorn
+          cd /opt/Multicorn
+          sudo mkdir -p /usr/share/doc/postgresql-doc-14 /usr/lib/postgresql/14/lib/bitcode/
+          sudo chmod 777 /usr/share/doc/postgresql-doc-14 /usr/lib/postgresql/14/lib/ /usr/share/postgresql/14/extension/ /usr/lib/postgresql/14/lib/bitcode/
+          make && make install
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
