@@ -43,7 +43,7 @@ jobs:
           sudo systemctl start postgresql.service
           pg_isready
       - name: Display PostgreSQL version
-        run: postgres --version
+        run: psql --version
       - name: Decrypt BigQuery key
         run: |
           mkdir /opt/key/
