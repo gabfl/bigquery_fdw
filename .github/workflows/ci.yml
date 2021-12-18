@@ -25,6 +25,10 @@ jobs:
           sudo apt-key add -
           sudo apt-get update
           sudo apt-get -y install postgresql-14 postgresql-server-dev-14
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes python3-setuptools python${{ matrix.python-version }}-dev make gcc
       - name: Clone and compile Multicorn
         run: |
           git clone git://github.com/gabfl/Multicorn.git /opt/Multicorn
@@ -36,3 +40,8 @@ jobs:
         run: |
           sudo systemctl start postgresql.service
           pg_isready
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip
+          pip install pycodestyle codecov pytest
+          python setup.py install
