@@ -37,27 +37,30 @@ jobs:
           cd /opt/Multicorn
           sudo mkdir -p /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
-          sudo make && sudo make install
+          sudo make && make install
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
           pg_isready
+      - name: Display PostgreSQL version
+        run: postgres --version
+      - name: Decrypt BigQuery key
+        run: |
+          mkdir /opt/key/
+          gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.GPG_PASSPHRASE_BIGQUERY_KEY }}" --output /opt/key/key.json src/unittest/utils/key/key.json.gpg
       - name: Install Python dependencies
         run: |
           pip install -U pip
           pip install pycodestyle codecov pytest
           python setup.py install
-      - name: Decrypt BigQuery key
-        run: |
-          mkdir /opt/key/
-          gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.GPG_PASSPHRASE_BIGQUERY_KEY }}" --output /opt/key/key.json src/unittest/utils/key/key.json.gpg
-          export GOOGLE_APPLICATION_CREDENTIALS="/opt/key/key.json"
       - name: Run pycodestyle
         run: |
           pycodestyle --exclude=venv --ignore=E501 .
       - name: Run pytest
         run: |
           coverage run --source=. -m pytest
+          env:
+            GOOGLE_APPLICATION_CREDENTIALS: "/opt/key/key.json"
       - name: Generate coverage report
         run: |
           coverage report -m
