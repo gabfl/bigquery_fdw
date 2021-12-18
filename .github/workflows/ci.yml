@@ -52,3 +52,15 @@ jobs:
           mkdir /opt/key/
           gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.GPG_PASSPHRASE_BIGQUERY_KEY }}" --output /opt/key/key.json src/unittest/utils/key/key.json.gpg
           export GOOGLE_APPLICATION_CREDENTIALS="/opt/key/key.json"
+      - name: Run pycodestyle
+        run: |
+          pycodestyle --exclude=venv --ignore=E501 .
+      - name: Run pytest
+        run: |
+          coverage run --source=. -m pytest
+      - name: Generate coverage report
+        run: |
+          coverage report -m
+      - name: Report to codecov
+        run: |
+          codecov
