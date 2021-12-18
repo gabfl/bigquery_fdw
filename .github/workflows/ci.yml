@@ -46,3 +46,8 @@ jobs:
           pip install -U pip
           pip install pycodestyle codecov pytest
           python setup.py install
+      - name: Decrypt BigQuery key
+        run: |
+          mkdir /opt/key/
+          gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.GPG_PASSPHRASE_BIGQUERY_KEY }}" --output /opt/key/key.json src/unittest/utils/key/key.json.gpg
+          export GOOGLE_APPLICATION_CREDENTIALS="/opt/key/key.json"
