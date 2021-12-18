@@ -17,4 +17,7 @@ coverage.xml
 
 # Misc
 tests/
-loca//
+loca/
+
+# Secrets
+src/unittest/utils/key/key.json
