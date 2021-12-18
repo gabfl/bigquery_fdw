@@ -1,7 +1,7 @@
 # bigquery_fdw: BigQuery Foreign Data Wrapper for PostgreSQL
 
 [![Pypi](https://img.shields.io/pypi/v/bigquery-fdw.svg)](https://pypi.org/project/bigquery-fdw/)
-[![Build Status](https://travis-ci.org/gabfl/bigquery_fdw.svg?branch=main)](https://travis-ci.org/gabfl/bigquery_fdw)
+[![Build Status](https://github.com/gabfl/bigquery_fdw/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gabfl/bigquery_fdw/actions)
 [![codecov](https://codecov.io/gh/gabfl/bigquery_fdw/branch/main/graph/badge.svg)](https://codecov.io/gh/gabfl/bigquery_fdw)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/gabfl/bigquery_fdw/main/LICENSE)
 

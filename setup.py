@@ -20,9 +20,9 @@ setup(
     # external dependencies
     install_requires=[
         'argparse',
-        'google-cloud-bigquery==2.6.2',
-        'google-auth==1.24.0',
-        'google-auth-oauthlib==0.4.2',
+        'google-cloud-bigquery==2.31.0',
+        'google-auth==2.3.3',
+        'google-auth-oauthlib==0.4.6',
     ],
     entry_points={
         'console_scripts': [
