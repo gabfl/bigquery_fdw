@@ -36,7 +36,7 @@ jobs:
           cd /opt/Multicorn
           sudo mkdir -p /usr/share/doc/postgresql-doc-11 /usr/lib/postgresql/11/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-11 /usr/lib/postgresql/11/lib/ /usr/share/postgresql/11/extension/ /usr/lib/postgresql/11/lib/bitcode/
-          make && make install
+          sudo make && sudo make install
       - name: Start PostgreSQL
         run: |
           sudo systemctl start postgresql.service
