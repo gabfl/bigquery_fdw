@@ -9,6 +9,9 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9']
         postgresql-version: ['10', '11', '12', '13', '14']
+        exclude:
+          - python-version: '3.9'
+            postgresql-version: ['13', '14']
 
     steps:
       - uses: actions/checkout@v2
