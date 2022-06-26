@@ -14,7 +14,7 @@ bq_client_test --query "SELECT count(*) FROM my_dataset.my_table"
 
 ## Example
 
-```
+```bash
 $ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
 $ bq_client_test --query "SELECT count(*) FROM my_dataset.my_table"
 
@@ -24,4 +24,9 @@ $ bq_client_test --query "SELECT count(*) FROM my_dataset.my_table"
 <google.cloud.bigquery.job.QueryJob object at 0x10c863c18>
  * Query results:
 Row((21215,), {'f0_': 0})
+```
+
+You can also test against BigQuery public datasets with:
+```bash
+bq_client_test --query "SELECT * FROM bigquery-public-data.usa_names.usa_1910_current WHERE year = 2017 AND number > 1000 LIMIT 5;"
 ```
