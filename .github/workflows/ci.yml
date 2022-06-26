@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9']
-        postgresql-version: ['10', '11', '12']
+        postgresql-version: ['10', '11', '12', '14', '14']
 
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +33,7 @@ jobs:
           sudo apt-get install --yes python3-setuptools python${{ matrix.python-version }}-dev make gcc
       - name: Clone and compile Multicorn
         run: |
-          git clone git://github.com/gabfl/Multicorn.git /opt/Multicorn
+          git clone https://github.com/pgsql-io/multicorn2.git /opt/Multicorn
           cd /opt/Multicorn
           sudo mkdir -p /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
