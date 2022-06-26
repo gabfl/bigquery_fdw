@@ -60,7 +60,7 @@ pip3 install bigquery-fdw
 Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](htthttps://github.com/pgsql-io/multicorn2)
+ - [Multicorn](https://github.com/pgsql-io/multicorn2)
 
 ## Authentication
 
