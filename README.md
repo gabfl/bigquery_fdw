@@ -20,14 +20,8 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ## Requirements
 
- - PostgreSQL >= 9.5 up to 12
+ - PostgreSQL >= 9.5 up to 14
  - Python >= 3.4
-
-Currently, PostgreSQL 13 and 14 are unsupported by the dependency Multicorn (see [here](https://github.com/Segfault-Inc/Multicorn/issues/269) and [here](https://github.com/Segfault-Inc/Multicorn/issues/261)). Some forks of Multicorn seem to add support for these versions and are referenced in the GitHub issues linked.
-
-## ⚠️ Migrating to version 1.8 from versions 1.7 and below
-
-Starting with version 1.8, the `fdw_key` option is deprecated and replaced with a default environment variable. See [Authentication](#Authentication).
 
 ## Get started
 
@@ -43,21 +37,20 @@ You need to install the following dependencies:
 
 ```bash
 # Install required packages
-apt-get update
-apt-get install --yes postgresql-server-dev-12 python3-setuptools python3-dev make gcc git
+apt update
+apt install -y postgresql-server-dev-14 python3-setuptools python3-dev make gcc git
 ```
 
-For PostgresSQL 9.X, install `postgresql-server-dev-9.X` instead of `postgresql-server-dev-12`.
-
-All PostgreSQL versions from 9.2 to 12 should be supported. Building Multicorn against PostgreSQL 13 is currently not working properly (as of 1/21/2013).
+All PostgreSQL versions from 9.2 to 14 should be supported.
 
 #### Installation
 
 ```bash
 # Install Multicorn
-# gabfl/Multicorn is a fork of Segfault-Inc/Multicorn that adds better support for Python3.
-# You may chose to build against the original project instead.
-git clone git://github.com/gabfl/Multicorn.git && cd Multicorn
+# pgsql-io/multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for PostgreSQL 13/14.
+# Alternatively, up to PostgreSQL 12, you can use gabfl/Multicorn that adds better support for Python3.
+# You may also choose to build against the original project instead.
+git clone https://github.com/pgsql-io/multicorn2.git Multicorn && cd Multicorn
 make && make install
 
 # Install bigquery_fdw
@@ -67,7 +60,7 @@ pip3 install bigquery-fdw
 Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](https://github.com/Segfault-Inc/Multicorn)
+ - [Multicorn](https://github.com/pgsql-io/multicorn2)
 
 ## Authentication
 
