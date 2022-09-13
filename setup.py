@@ -20,7 +20,7 @@ setup(
     # external dependencies
     install_requires=[
         'google-cloud-bigquery==3.3.2',
-        'google-auth==2.11.0,
+        'google-auth==2.11.0',
         'google-auth-oauthlib==0.5.2',
     ],
     entry_points={
