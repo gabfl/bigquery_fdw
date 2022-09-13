@@ -22,6 +22,7 @@ setup(
         'google-cloud-bigquery==3.3.2',
         'google-auth==2.11.0',
         'google-auth-oauthlib==0.5.2',
+        'protobuf==4.21.5',  # Dependency for google-cloud-bigquery
     ],
     entry_points={
         'console_scripts': [
