@@ -20,7 +20,6 @@ setup(
     # external dependencies
     install_requires=[
         'google-cloud-bigquery==3.3.2',
-        # 'google-auth==2.10.0',
         'google-auth==2.11.0',
         'google-auth-oauthlib==0.5.2',
         'protobuf==3.20.1',  # Forcing version for google-cloud-bigquery
