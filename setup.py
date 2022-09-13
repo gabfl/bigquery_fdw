@@ -24,7 +24,7 @@ setup(
         'google-auth==2.8.0',
         # 'google-auth==2.11.0',
         'google-auth-oauthlib==0.5.2',
-        # 'protobuf==4.21.5',  # Forcing version for google-cloud-bigquery
+        'protobuf==3.12.0',  # Forcing version for google-cloud-bigquery
         'grpcio==1.48.1',  # Forcing version for google-cloud-bigquery
         'grpcio-status==1.48.1',  # Forcing version for google-cloud-bigquery
     ],
