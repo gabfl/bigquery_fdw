@@ -56,6 +56,9 @@ jobs:
           pip install -U pip
           pip install pycodestyle codecov pytest
           python setup.py install
+      - name: Display Python dependencies
+        run: |
+          pip3 freeze
       - name: Run pycodestyle
         run: |
           pycodestyle --exclude=venv --ignore=E501 .
