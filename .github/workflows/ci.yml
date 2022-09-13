@@ -54,6 +54,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -U pip
+          pip uninstall protobuf
           pip install pycodestyle codecov pytest
           python setup.py install
       - name: Display Python dependencies
