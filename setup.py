@@ -8,7 +8,7 @@ except(IOError, ImportError):
 
 setup(
     name='bigquery-fdw',
-    version='2.0',
+    version='2.1',
     description='BigQuery Foreign Data Wrapper for PostgreSQL',
     long_description=long_description,
     author='Gabriel Bordeaux',
@@ -19,8 +19,8 @@ setup(
     package_dir={'bigquery_fdw': 'src'},
     # external dependencies
     install_requires=[
-        'google-cloud-bigquery==3.2.0',
-        'google-auth==2.8.0',
+        'google-cloud-bigquery==3.3.2',
+        'google-auth==2.11.0,
         'google-auth-oauthlib==0.5.2',
     ],
     entry_points={
