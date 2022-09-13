@@ -3,12 +3,12 @@ from setuptools import setup
 try:
     import pypandoc
     long_description = pypandoc.convert_file('README.md', 'rst')
-except(IOError, ImportError):
+except (IOError, ImportError):
     long_description = open('README.md').read()
 
 setup(
     name='bigquery-fdw',
-    version='2.0',
+    version='2.1',
     description='BigQuery Foreign Data Wrapper for PostgreSQL',
     long_description=long_description,
     author='Gabriel Bordeaux',
@@ -19,9 +19,12 @@ setup(
     package_dir={'bigquery_fdw': 'src'},
     # external dependencies
     install_requires=[
-        'google-cloud-bigquery==3.2.0',
-        'google-auth==2.8.0',
+        'google-cloud-bigquery==3.3.2',
+        'google-auth==2.11.0',
         'google-auth-oauthlib==0.5.2',
+        'protobuf==4.21.1',  # Forcing version for google-cloud-bigquery
+        'grpcio==1.48.1',  # Forcing version for google-cloud-bigquery
+        'grpcio-status==1.48.1',  # Forcing version for google-cloud-bigquery
     ],
     entry_points={
         'console_scripts': [
