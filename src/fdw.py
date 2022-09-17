@@ -416,9 +416,10 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         operators = ['=', '<', '>', '<=', '>=', '!=', '<>', 'LIKE', 'NOT LIKE']
 
         # Mapping between multicorn operators and BigQuery operators
-        mapping = {}
-        mapping['~~'] = 'LIKE'
-        mapping['!~~'] = 'NOT LIKE'
+        mapping = {
+            '~~': 'LIKE',
+            '!~~': 'NOT LIKE',
+        }
 
         if operator in operators:  # Operator is natively supported
             return operator
