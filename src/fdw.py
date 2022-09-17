@@ -76,6 +76,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             datatype('date', 'DATE', 'DATE'),
             datatype('time without time zone', 'TIME', 'TIME'),
             datatype('timestamp without time zone', 'DATETIME', 'DATETIME'),
+            datatype('geometry', 'GEOGRAPHY', None),  # GEOGRAPHY does not exists in legacy SQL
+            datatype('geography', 'GEOGRAPHY', None),  # GEOGRAPHY does not exists in legacy SQL
         ]
 
     def setConversionRules(self):
@@ -441,7 +443,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
             if datatype.postgres == pgDatatype:  # If the PostgreSQL data type matches the known data type
                 # Returns equivalent BigQuery data type
                 if dialect == 'legacy':
-                    return datatype.bq_legacy
+                    if datatype.bq_legacy:  # If there is a matching type
+                        return datatype.bq_legacy
                 else:
                     return datatype.bq_standard
 
