@@ -63,7 +63,7 @@ class Test(unittest.TestCase):
             self.assertIsInstance(datatype, tuple)
             self.assertIsInstance(datatype.postgres, str)
             self.assertIsInstance(datatype.bq_standard, str)
-            self.assertIsInstance(datatype.bq_legacy, str)
+            assert isinstance(datatype.bq_legacy, str) or datatype.bq_legacy is None
 
     def test_setConversionRules(self):
         self.fdw.setConversionRules()
