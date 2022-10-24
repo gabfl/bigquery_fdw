@@ -24,7 +24,7 @@ setup(
         'google-auth-oauthlib==0.5.3',
         'protobuf==4.21.8',  # Forcing version for google-cloud-bigquery
         'grpcio==1.50.0',  # Forcing version for google-cloud-bigquery
-        'grpcio-status===1.50.0',  # Forcing version for google-cloud-bigquery
+        'grpcio-status==1.50.0',  # Forcing version for google-cloud-bigquery
     ],
     entry_points={
         'console_scripts': [
