@@ -70,6 +70,8 @@ jobs:
       - name: Generate coverage report
         run: |
           coverage report -m
-      - name: Report to codecov
+      - name: Upload coverage reports to Codecov
         run: |
-          codecov
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${CODECOV_TOKEN}
