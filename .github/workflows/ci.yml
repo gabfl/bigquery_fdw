@@ -54,7 +54,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -U pip
-          pip install pycodestyle coverage pytest
+          pip install pycodestyle coverage pytest pypandoc
           python setup.py install
       - name: Display Python dependencies
         run: |
