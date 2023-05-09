@@ -19,9 +19,9 @@ setup(
     package_dir={'bigquery_fdw': 'src'},
     # external dependencies
     install_requires=[
-        'google-cloud-bigquery==3.3.5',
-        'google-auth==2.13.0',
-        'google-auth-oauthlib==0.5.3',
+        'google-cloud-bigquery==3.10.0',
+        'google-auth==2.17.3',
+        'google-auth-oauthlib==1.0.0',
         'protobuf==4.21.8',  # Forcing version for google-cloud-bigquery
         'grpcio==1.50.0',  # Forcing version for google-cloud-bigquery
         'grpcio-status==1.50.0',  # Forcing version for google-cloud-bigquery
