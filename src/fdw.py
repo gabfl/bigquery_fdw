@@ -266,7 +266,7 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         query += "SELECT " + self.buildColumnList(columns)
 
         # Add FROM clause
-        query += " FROM `" + self.dataset + "." + self.table + "` "
+        query += " FROM " + self.dataset + "." + self.table + " "
 
         # Add WHERE clause
         clause, parameters = self.buildWhereClause(quals)
@@ -510,13 +510,8 @@ class ConstantForeignDataWrapper(ForeignDataWrapper):
         # Verbose log
         if self.verbose:
             log_to_postgres(
-                "Add query parameter `"
-                + self.client.createBQParamValue(value)
-                + "` for column `"
-                + column
-                + "` with the type `"
-                + type_
-                + "`",
+                "Add query parameter `" + self.client.createBQParamValue(value)
+                or "" + "` for column `" + column + "` with the type `" + type_ + "`",
                 INFO,
             )
 
