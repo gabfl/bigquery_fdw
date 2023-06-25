@@ -12,7 +12,6 @@ from google import auth
 
 
 class BqClient:
-
     # Set vars
     client = None
     queryJob = None
@@ -91,7 +90,7 @@ class BqClient:
         Prepare a parameter for a parameterized query
         As documented by Google, only standard SQL syntax supports parameters in queries
 
-        See https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/bigquery/cloud-client/query_params.py
+        See https://github.com/googleapis/python-bigquery/blob/main/samples/client_query_w_positional_params.py
         """
 
         return bigquery.ScalarQueryParameter(
@@ -100,23 +99,27 @@ class BqClient:
             # parameters.
             None,
             type_,
-            self.varToString(value),
+            self.createBQParamValue(value),
         )
 
-    def varToString(self, var):
+    def createBQParamValue(self, var):
         """
-        Format a variable to a string
+        Generate appropriate parameter value for BigQuery query parameter
 
         Examples:
-        `varToString(1234)` -> '1234'
-        `varToString('1234')` -> '1234'
-        `varToString(datetime.datetime.now())` -> '2017-10-03 11:47:54'
-        `varToString(datetime.datetime.now().date())` -> '2017-10-03'
+        `createBQParamValue(1234)` -> 1234
+        `createBQParamValue('1234')` -> '1234'
+        `createBQParamValue(datetime.datetime.now())` -> '2017-10-03 11:47:54'
+        `createBQParamValue(datetime.datetime.now().date())` -> '2017-10-03'
         """
 
         if type(var) is datetime.date:
-            return var.strftime("%Y-%m-%d")
+            param_value = var.strftime("%Y-%m-%d")
         elif type(var) is datetime.datetime:
-            return var.strftime("%Y-%m-%d %H:%M:%S")
+            param_value = var.strftime("%Y-%m-%d %H:%M:%S")
+        elif type(var) in (int, float):
+            param_value = var
+        else:
+            param_value = str(var)
 
-        return str(var)
+        return param_value
