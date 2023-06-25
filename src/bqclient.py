@@ -119,6 +119,8 @@ class BqClient:
             param_value = var.strftime("%Y-%m-%d %H:%M:%S")
         elif type(var) in (int, float):
             param_value = var
+        elif var.lower() = 'null':
+            param_value = None
         else:
             param_value = str(var)
 
