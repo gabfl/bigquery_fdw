@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.8', '3.9']
+        python-version: ['3.10']
         postgresql-version: ['10', '11', '12', '13', '14', '15']
 
     steps:
@@ -37,7 +37,7 @@ jobs:
           cd /opt/Multicorn
           sudo mkdir -p /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
-          sudo chmod 777 /usr/local/lib/python${{ matrix.python-version }}/dist-packages/
+          sudo chmod 777 `python${{ matrix.python-version }} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
           make && make install
         env:
           PYTHON_OVERRIDE: python${{ matrix.python-version }}
@@ -54,7 +54,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -U pip
-          pip install pycodestyle codecov pytest
+          pip install pycodestyle coverage pytest pypandoc
           python setup.py install
       - name: Display Python dependencies
         run: |
@@ -70,6 +70,8 @@ jobs:
       - name: Generate coverage report
         run: |
           coverage report -m
-      - name: Report to codecov
+      - name: Upload coverage reports to Codecov
         run: |
-          codecov
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${CODECOV_TOKEN}
