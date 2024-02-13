@@ -55,7 +55,7 @@ jobs:
         run: |
           pip install -U pip
           pip install pycodestyle coverage pytest pypandoc
-          python setup.py install
+          pip3 install .
       - name: Display Python dependencies
         run: |
           pip3 freeze
