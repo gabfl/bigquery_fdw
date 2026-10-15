@@ -21,7 +21,6 @@ class Test(unittest.TestCase):
             'fdw_verbose': 'true',
             'fdw_sql_dialect': 'standard',
             'fdw_group': 'false',
-            'fdw_casting': 'false',
         }
 
         # Set column list (ordered dict of ColumnDefinition from Multicorn)
