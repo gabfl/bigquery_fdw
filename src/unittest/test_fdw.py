@@ -8,6 +8,8 @@ import multicorn
 from google.cloud import bigquery
 
 from ..bqclient import BqClient
+from multicorn.utils import MulticornException
+
 from ..fdw import ConstantForeignDataWrapper
 
 
@@ -21,7 +23,6 @@ class Test(unittest.TestCase):
             'fdw_verbose': 'true',
             'fdw_sql_dialect': 'standard',
             'fdw_group': 'false',
-            'fdw_casting': 'false',
         }
 
         # Set column list (ordered dict of ColumnDefinition from Multicorn)
@@ -51,10 +52,11 @@ class Test(unittest.TestCase):
         self.assertIsNone(self.fdw.setOptions(self.options))
 
     def test_setOptions_2(self):
-        # Should create a `KeyError` exception which should call log_to_postgres()
+        # Should create a `KeyError` exception which should call log_to_postgres() with ERROR
         o = self.options
         del o['fdw_dataset']
-        self.assertIsNone(self.fdw.setOptions(o))
+        with self.assertRaises(MulticornException):
+            self.fdw.setOptions(o)
 
     def test_setDatatypes(self):
         self.fdw.setDatatypes()
@@ -138,9 +140,10 @@ class Test(unittest.TestCase):
         self.assertIsInstance(self.fdw.setClient(), BqClient)
 
     def test_setClient_3(self):
-        # Should return `None` and call log_to_postgres() if the BigQuery client cannot be set correctly
+        # Should call log_to_postgres() with ERROR if the BigQuery client cannot be set correctly
         with patch.dict(os.environ, {'GOOGLE_APPLICATION_CREDENTIALS': ''}):
-            self.assertIsNone(self.fdw.setClient())
+            with self.assertRaises(MulticornException):
+                self.fdw.setClient()
 
     def test_execute(self):
         self.fdw.setClient()
@@ -304,8 +307,8 @@ class Test(unittest.TestCase):
         self.fdw.setOptionCasting(casting)
 
         # Casting should fail on invalid types
-        self.assertEqual(self.fdw.castColumn(
-            'number', 'number', 'INT64'), 'number')
+        with self.assertRaises(MulticornException):
+            self.fdw.castColumn('number', 'number', 'INT64')
 
     def test_castColumn_4(self):
         # Options are a dict casted as a string
@@ -313,8 +316,8 @@ class Test(unittest.TestCase):
         self.fdw.setOptionCasting(casting)
 
         # Casting should fail on invalid types
-        self.assertEqual(self.fdw.castColumn(
-            'number', 'number', 'SOME_INVALID_TYPE'), 'number')
+        with self.assertRaises(MulticornException):
+            self.fdw.castColumn('number', 'number', 'SOME_INVALID_TYPE')
 
     def test_addColumnAlias(self):
         self.assertEqual(self.fdw.addColumnAlias(
@@ -370,8 +373,9 @@ class Test(unittest.TestCase):
         self.assertEqual(self.fdw.getOperator('!~~'), 'NOT LIKE')
 
     def test_getOperator_4(self):
-        # Test an invalid operator, should return `None` and call log_to_postgres()
-        self.assertIsNone(self.fdw.getOperator('**'))
+        # Test an invalid operator, should call log_to_postgres() with ERROR
+        with self.assertRaises(MulticornException):
+            self.fdw.getOperator('**')
 
     def test_getBigQueryDatatype(self):
         self.assertEqual(self.fdw.getBigQueryDatatype('number'), 'INT64')
