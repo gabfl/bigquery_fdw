@@ -52,6 +52,6 @@ Time: 3.992s (3 seconds)
 
 The docker images comes with:
  - PostgreSQL 14 installed
- - [Multicorn](https://github.com/pgsql-io/multicorn2) installed and compiled
+ - [Multicorn](https://github.com/ShaheedHaque/multicorn2) installed and compiled
  - All the packages required by bigquery_fdw
  - The setup.sql file comes pre-loaded with the foreign table `bigquery-public-data.usa_names.usa_1910_current` to test queries.

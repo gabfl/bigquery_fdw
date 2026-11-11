@@ -1,30 +1,29 @@
 from setuptools import setup
 
-try:
-    import pypandoc
-    long_description = pypandoc.convert_file('README.md', 'rst')
-except (IOError, ImportError):
-    long_description = open('README.md').read()
+with open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='bigquery-fdw',
-    version='2.1.1',
+    version='2.2.0',
     description='BigQuery Foreign Data Wrapper for PostgreSQL',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Gabriel Bordeaux',
     author_email='pypi@gab.lc',
     url='https://github.com/gabfl/bigquery_fdw',
     license='MIT',
+    python_requires='>=3.10',
     packages=['bigquery_fdw'],
     package_dir={'bigquery_fdw': 'src'},
     # external dependencies
     install_requires=[
-        'google-cloud-bigquery==3.10.0',
-        'google-auth==2.17.3',
-        'google-auth-oauthlib==1.0.0',
-        'protobuf==4.21.8',  # Forcing version for google-cloud-bigquery
-        'grpcio==1.50.0',  # Forcing version for google-cloud-bigquery
-        'grpcio-status==1.50.0',  # Forcing version for google-cloud-bigquery
+        'google-cloud-bigquery==3.47.0',
+        'google-auth==2.62.2',
+        'google-auth-oauthlib==1.5.0',
+        # 'protobuf==4.21.8',  # Forcing version for google-cloud-bigquery
+        # 'grpcio==1.60.1',  # Forcing version for google-cloud-bigquery
+        # 'grpcio-status==1.60.1',  # Forcing version for google-cloud-bigquery
     ],
     entry_points={
         'console_scripts': [

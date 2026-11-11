@@ -4,16 +4,17 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.10']
-        postgresql-version: ['10', '11', '12', '13', '14', '15']
+        python-version: ['3.12']
+        postgresql-version: ['14', '15', '16', '17', '18']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -22,9 +23,9 @@ jobs:
       - name: Install PostgreSQL manually
         run: |
           sudo apt-get remove --purge postgresql*
-          echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main 15" | sudo tee -a /etc/apt/sources.list.d/pgdg.list
-          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
-          sudo apt-key add -
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update
           sudo apt-get -y install postgresql-${{ matrix.postgresql-version }} postgresql-server-dev-${{ matrix.postgresql-version }}
       - name: Install Linux dependencies
@@ -33,11 +34,14 @@ jobs:
           sudo apt-get install --yes python3-setuptools python${{ matrix.python-version }}-dev make gcc
       - name: Clone and compile Multicorn
         run: |
-          git clone https://github.com/pgsql-io/multicorn2.git /opt/Multicorn
+          # pgsql-io/multicorn2 was removed from GitHub in October 2026.
+          # Build from a surviving copy, pinned to upstream's v3.2 release commit.
+          git clone https://github.com/ShaheedHaque/multicorn2.git /opt/Multicorn
           cd /opt/Multicorn
+          git checkout 4e0feaa8c8a4e7db80ff442d71fb7786d5519e29
           sudo mkdir -p /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
-          sudo chmod 777 `python${{ matrix.python-version }} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`
+          sudo chmod 777 `python${{ matrix.python-version }} -c "import sysconfig; print(sysconfig.get_paths()['purelib'])"`
           make && make install
         env:
           PYTHON_OVERRIDE: python${{ matrix.python-version }}
@@ -54,8 +58,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install -U pip
-          pip install pycodestyle coverage pytest pypandoc
-          python setup.py install
+          pip install pycodestyle coverage pytest
+          pip3 install .
       - name: Display Python dependencies
         run: |
           pip3 freeze
@@ -70,8 +74,8 @@ jobs:
       - name: Generate coverage report
         run: |
           coverage report -m
+          coverage xml
       - name: Upload coverage reports to Codecov
-        run: |
-          curl -Os https://uploader.codecov.io/latest/linux/codecov
-          chmod +x codecov
-          ./codecov -t ${CODECOV_TOKEN}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

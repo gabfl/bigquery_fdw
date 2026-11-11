@@ -20,8 +20,8 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ## Requirements
 
- - PostgreSQL >= 9.5 up to 14
- - Python >= 3.4
+ - PostgreSQL 14 to 18
+ - Python >= 3.10
 
 ## Get started
 
@@ -38,19 +38,21 @@ You need to install the following dependencies:
 ```bash
 # Install required packages
 apt update
-apt install -y postgresql-server-dev-14 python3-setuptools python3-dev make gcc git
+apt install -y postgresql-server-dev-18 python3-setuptools python3-dev make gcc git
 ```
 
-All PostgreSQL versions from 9.2 to 14 should be supported.
+PostgreSQL versions 14 to 18 are tested in CI.
 
 #### Installation
 
 ```bash
 # Install Multicorn
-# pgsql-io/multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for PostgreSQL 13/14.
+# multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for recent PostgreSQL versions.
+# The original pgsql-io/multicorn2 repository was removed in October 2026; this copy is pinned to its v3.2 release.
 # Alternatively, up to PostgreSQL 12, you can use gabfl/Multicorn that adds better support for Python3.
 # You may also choose to build against the original project instead.
-git clone https://github.com/pgsql-io/multicorn2.git Multicorn && cd Multicorn
+git clone https://github.com/ShaheedHaque/multicorn2.git Multicorn && cd Multicorn
+git checkout 4e0feaa8c8a4e7db80ff442d71fb7786d5519e29
 make && make install
 
 # Install bigquery_fdw
@@ -60,7 +62,7 @@ pip3 install bigquery-fdw
 Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](https://github.com/pgsql-io/multicorn2)
+ - [Multicorn](https://github.com/ShaheedHaque/multicorn2)
 
 ## Authentication
 
