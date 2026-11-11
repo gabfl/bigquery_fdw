@@ -47,10 +47,12 @@ PostgreSQL versions 14 to 18 are tested in CI.
 
 ```bash
 # Install Multicorn
-# pgsql-io/multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for recent PostgreSQL versions.
+# multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for recent PostgreSQL versions.
+# The original pgsql-io/multicorn2 repository was removed in October 2026; this copy is pinned to its v3.2 release.
 # Alternatively, up to PostgreSQL 12, you can use gabfl/Multicorn that adds better support for Python3.
 # You may also choose to build against the original project instead.
-git clone https://github.com/pgsql-io/multicorn2.git Multicorn && cd Multicorn
+git clone https://github.com/ShaheedHaque/multicorn2.git Multicorn && cd Multicorn
+git checkout 4e0feaa8c8a4e7db80ff442d71fb7786d5519e29
 make && make install
 
 # Install bigquery_fdw
@@ -60,7 +62,7 @@ pip3 install bigquery-fdw
 Major dependencies installed automatically during the installation process:
 
  - [Google Cloud BigQuery](https://pypi.org/project/google-cloud-bigquery/)
- - [Multicorn](https://github.com/pgsql-io/multicorn2)
+ - [Multicorn](https://github.com/ShaheedHaque/multicorn2)
 
 ## Authentication
 

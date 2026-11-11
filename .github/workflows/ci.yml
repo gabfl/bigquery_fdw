@@ -34,8 +34,11 @@ jobs:
           sudo apt-get install --yes python3-setuptools python${{ matrix.python-version }}-dev make gcc
       - name: Clone and compile Multicorn
         run: |
-          git clone https://github.com/pgsql-io/multicorn2.git /opt/Multicorn
+          # pgsql-io/multicorn2 was removed from GitHub in October 2026.
+          # Build from a surviving copy, pinned to upstream's v3.2 release commit.
+          git clone https://github.com/ShaheedHaque/multicorn2.git /opt/Multicorn
           cd /opt/Multicorn
+          git checkout 4e0feaa8c8a4e7db80ff442d71fb7786d5519e29
           sudo mkdir -p /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 /usr/share/doc/postgresql-doc-${{ matrix.postgresql-version }} /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/ /usr/share/postgresql/${{ matrix.postgresql-version }}/extension/ /usr/lib/postgresql/${{ matrix.postgresql-version }}/lib/bitcode/
           sudo chmod 777 `python${{ matrix.python-version }} -c "import sysconfig; print(sysconfig.get_paths()['purelib'])"`
