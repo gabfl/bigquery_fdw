@@ -20,8 +20,8 @@ It allows to write queries in PostgreSQL SQL syntax using a foreign table. It su
 
 ## Requirements
 
- - PostgreSQL >= 9.5 up to 14
- - Python >= 3.4
+ - PostgreSQL 14 to 18
+ - Python >= 3.10
 
 ## Get started
 
@@ -38,16 +38,16 @@ You need to install the following dependencies:
 ```bash
 # Install required packages
 apt update
-apt install -y postgresql-server-dev-14 python3-setuptools python3-dev make gcc git
+apt install -y postgresql-server-dev-18 python3-setuptools python3-dev make gcc git
 ```
 
-All PostgreSQL versions from 9.2 to 14 should be supported.
+PostgreSQL versions 14 to 18 are tested in CI.
 
 #### Installation
 
 ```bash
 # Install Multicorn
-# pgsql-io/multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for PostgreSQL 13/14.
+# pgsql-io/multicorn2 is a fork of Segfault-Inc/Multicorn that adds support for recent PostgreSQL versions.
 # Alternatively, up to PostgreSQL 12, you can use gabfl/Multicorn that adds better support for Python3.
 # You may also choose to build against the original project instead.
 git clone https://github.com/pgsql-io/multicorn2.git Multicorn && cd Multicorn
